@@ -28,9 +28,13 @@ const MUSIC_PLAYER = {
   // 2) Reference it below. The path starts at /audio/...
   // 3) Push to GitHub → Vercel auto-redeploys.
   local: {
-    src: "/audio/get-away-freestyle.mp3",
-    title: "GET AWAY (FREESTYLE)",
     artist: "AI KING",
+    tracks: [
+      { src: "/audio/get-away-freestyle.mp3", title: "GET AWAY (FREESTYLE)" },
+      { src: "/audio/east-sign.mp3",          title: "EAST SIGN" },
+      { src: "/audio/to-the-sky.mp3",         title: "TO THE SKY" },
+      { src: "/audio/meant-pussy.mp3",        title: "MEANT PUSSY" },
+    ],
   },
 
   // ---- type: "soundcloud" ----
@@ -67,18 +71,18 @@ const TRACKS = [
 ];
 
 const SOCIALS = [
-  { name: "Instagram", abbr: "IG", url: "https://instagram.com/OfficialAIKING" },
-  { name: "TikTok", abbr: "TT", url: "https://tiktok.com/@KingAI.Jay" },
-  { name: "YouTube", abbr: "YT", url: "https://youtube.com/@OfficalAIKING" },
-  { name: "X", abbr: "X", url: "https://x.com/OfficialAIKING" },
+  { name: "Instagram", icon: "instagram", url: "https://instagram.com/OfficialAIKING" },
+  { name: "TikTok",    icon: "tiktok",    url: "https://tiktok.com/@KingAI.Jay" },
+  { name: "YouTube",   icon: "youtube",   url: "https://youtube.com/@OfficalAIKING" },
+  { name: "X",         icon: "x",         url: "https://x.com/OfficialAIKING" },
 ];
 
 const STREAMING = [
-  { name: "Spotify", url: "#" },
-  { name: "Apple Music", url: "#" },
-  { name: "Tidal", url: "#" },
-  { name: "YouTube Music", url: "#" },
-  { name: "Amazon Music", url: "#" },
+  { name: "Spotify",       icon: "spotify",       url: "#" },
+  { name: "Apple Music",   icon: "appleMusic",    url: "#" },
+  { name: "Tidal",         icon: "tidal",         url: "#" },
+  { name: "YouTube Music", icon: "youtubeMusic",  url: "#" },
+  { name: "Amazon Music",  icon: "amazonMusic",   url: "#" },
 ];
 
 // ========================================
@@ -208,6 +212,91 @@ const VolumeIcon = ({ size = 16 }) => (
     <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4z"/>
   </svg>
 );
+const PrevIcon = ({ size = 18 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
+    <path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/>
+  </svg>
+);
+const NextIcon = ({ size = 18 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
+    <path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/>
+  </svg>
+);
+const CloseIcon = ({ size = 20 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+    <line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/>
+  </svg>
+);
+
+const BRAND_ICONS = {
+  instagram: (
+    <g>
+      <rect x="3" y="3" width="18" height="18" rx="5" fill="none" stroke="currentColor" strokeWidth="1.8"/>
+      <circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" strokeWidth="1.8"/>
+      <circle cx="17.5" cy="6.5" r="1.2" fill="currentColor"/>
+    </g>
+  ),
+  tiktok: (
+    <path fill="currentColor" d="M19.6 6.3a4.7 4.7 0 0 1-3.5-4V2h-3v13.5a2.7 2.7 0 1 1-2.7-2.7v-3a5.7 5.7 0 1 0 5.7 5.7V8.7a8 8 0 0 0 4.7 1.5V7.2a4.6 4.6 0 0 1-1.2-.9z"/>
+  ),
+  youtube: (
+    <g>
+      <rect x="2" y="6" width="20" height="12" rx="3.5" fill="currentColor"/>
+      <polygon points="10,9.5 16,12 10,14.5" fill="#0a0a0a"/>
+    </g>
+  ),
+  x: (
+    <path fill="currentColor" d="M18.2 2.25h3.3l-7.2 8.26 8.5 11.24h-6.6l-5.2-6.82-5.96 6.82H1.7l7.7-8.83L1.25 2.25h6.83l4.7 6.23zm-1.16 17.5h1.83L7.08 4.13H5.12z"/>
+  ),
+  spotify: (
+    <g>
+      <circle cx="12" cy="12" r="10" fill="#1DB954"/>
+      <path d="M7 9.7c3-1 7-.8 10 .7M7.5 12c2.5-.8 6-.6 8.4.8M8 14.5c2-.6 4.5-.4 6 .6"
+        stroke="#0a0a0a" strokeWidth="1.5" strokeLinecap="round" fill="none"/>
+    </g>
+  ),
+  appleMusic: (
+    <g>
+      <defs>
+        <linearGradient id="am-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#FA233B"/>
+          <stop offset="100%" stopColor="#FB5C74"/>
+        </linearGradient>
+      </defs>
+      <rect x="2" y="2" width="20" height="20" rx="5" fill="url(#am-grad)"/>
+      <path d="M14 7l-5 1.2v6.5a1.9 1.9 0 1 1-1-1.7v-5l5-1.2v-1z" fill="#fff"/>
+    </g>
+  ),
+  tidal: (
+    <g>
+      <path d="M5 9l3-3 3 3-3 3zM13 9l3-3 3 3-3 3zM9 13l3-3 3 3-3 3z" fill="currentColor"/>
+    </g>
+  ),
+  youtubeMusic: (
+    <g>
+      <circle cx="12" cy="12" r="10" fill="#FF0000"/>
+      <polygon points="10,8.5 17,12 10,15.5" fill="#fff"/>
+    </g>
+  ),
+  amazonMusic: (
+    <g>
+      <circle cx="12" cy="12" r="10" fill="#00A8E1"/>
+      <circle cx="12" cy="11" r="3.5" fill="#fff"/>
+      <polygon points="11,9.3 14.2,11 11,12.7" fill="#00A8E1"/>
+      <path d="M5.5 16.5c4 2.5 9 2.5 13 0" stroke="#fff" strokeWidth="1.4" fill="none" strokeLinecap="round"/>
+    </g>
+  ),
+};
+
+function BrandIcon({ name, size = 22 }) {
+  const icon = BRAND_ICONS[name];
+  if (!icon) return null;
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" style={{ display: "inline-block", flexShrink: 0, verticalAlign: "middle" }}>
+      {icon}
+    </svg>
+  );
+}
 
 function fmtTime(s) {
   if (!s || isNaN(s) || !isFinite(s)) return "0:00";
@@ -216,22 +305,44 @@ function fmtTime(s) {
   return `${m}:${sec.toString().padStart(2, "0")}`;
 }
 
-function LocalPlayer({ src, title, artist }) {
+function LocalPlayer({ tracks, artist, autoplay = false }) {
   const audioRef = useRef(null);
+  const [currentIndex, setCurrentIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(0.85);
   const [error, setError] = useState(false);
+  // Once true, switching tracks (or external autoplay trigger) starts playback
+  const [shouldPlay, setShouldPlay] = useState(false);
+
+  const current = tracks[currentIndex];
 
   useEffect(() => {
     if (audioRef.current) audioRef.current.volume = volume;
   }, [volume]);
 
+  // External autoplay handoff (e.g. user dismissed email modal)
+  useEffect(() => {
+    if (autoplay) setShouldPlay(true);
+  }, [autoplay]);
+
+  // When the source changes (track switch) or shouldPlay flips on, attempt playback
+  useEffect(() => {
+    setCurrentTime(0);
+    setError(false);
+    if (shouldPlay && audioRef.current) {
+      audioRef.current.play().catch(() => {});
+    }
+  }, [currentIndex, shouldPlay]);
+
   const togglePlay = () => {
     if (!audioRef.current) return;
     if (isPlaying) audioRef.current.pause();
-    else audioRef.current.play().catch(() => setError(true));
+    else {
+      setShouldPlay(true);
+      audioRef.current.play().catch(() => setError(true));
+    }
   };
 
   const handleSeek = (e) => {
@@ -242,24 +353,47 @@ function LocalPlayer({ src, title, artist }) {
     setCurrentTime(pct * duration);
   };
 
+  const next = () => { setShouldPlay(true); setCurrentIndex(i => (i + 1) % tracks.length); };
+  const prev = () => { setShouldPlay(true); setCurrentIndex(i => (i - 1 + tracks.length) % tracks.length); };
+  const select = (i) => { setShouldPlay(true); setCurrentIndex(i); };
+
+  const handleEnded = () => {
+    setIsPlaying(false);
+    setCurrentTime(0);
+    if (currentIndex < tracks.length - 1) {
+      setShouldPlay(true);
+      setCurrentIndex(i => i + 1);
+    }
+  };
+
   const progressPct = duration ? (currentTime / duration) * 100 : 0;
+
+  const ctrlBtn = {
+    flexShrink: 0, width: 36, height: 36, borderRadius: "50%",
+    background: "transparent", border: "1px solid rgba(255,255,255,0.18)",
+    color: "#DDD", display: "flex", alignItems: "center", justifyContent: "center",
+    cursor: "pointer", padding: 0,
+  };
 
   return (
     <PlayerShell>
       <audio
         ref={audioRef}
-        src={src}
+        src={current.src}
         preload="metadata"
         onTimeUpdate={() => setCurrentTime(audioRef.current?.currentTime || 0)}
         onLoadedMetadata={() => setDuration(audioRef.current?.duration || 0)}
         onPlay={() => setIsPlaying(true)}
         onPause={() => setIsPlaying(false)}
-        onEnded={() => { setIsPlaying(false); setCurrentTime(0); }}
+        onEnded={handleEnded}
         onError={() => setError(true)}
       />
 
-      <div style={{ display: "flex", alignItems: "center", gap: 18, padding: "20px 22px" }}>
-        {/* Big play / pause */}
+      <div style={{ display: "flex", alignItems: "center", gap: 14, padding: "20px 22px", flexWrap: "wrap" }}>
+        <button onClick={prev} aria-label="Previous track" style={ctrlBtn}>
+          <PrevIcon size={16} />
+        </button>
+
         <button
           onClick={togglePlay}
           aria-label={isPlaying ? "Pause" : "Play"}
@@ -278,18 +412,28 @@ function LocalPlayer({ src, title, artist }) {
           {isPlaying ? <PauseIcon size={24} /> : <PlayIcon size={24} />}
         </button>
 
-        {/* Track info + progress */}
-        <div style={{ flex: 1, minWidth: 0 }}>
+        <button onClick={next} aria-label="Next track" style={ctrlBtn}>
+          <NextIcon size={16} />
+        </button>
+
+        <div style={{ flex: 1, minWidth: 200 }}>
           <div style={{
             fontFamily: "Bebas Neue", fontSize: 22, letterSpacing: 4, color: "#FFFFFF",
             whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
-          }}>{title}</div>
+            textAlign: "left",
+          }}>{current.title}</div>
           <div style={{
-            fontFamily: "JetBrains Mono", fontSize: 10, letterSpacing: 3, color: "#FFD700",
-            marginBottom: 12, marginTop: 2,
-          }}>{artist}</div>
+            display: "flex", justifyContent: "space-between", alignItems: "center",
+            marginTop: 2, marginBottom: 12,
+          }}>
+            <span style={{
+              fontFamily: "JetBrains Mono", fontSize: 10, letterSpacing: 3, color: "#FFD700",
+            }}>{artist}</span>
+            <span style={{
+              fontFamily: "JetBrains Mono", fontSize: 9, letterSpacing: 2, color: "#666",
+            }}>{String(currentIndex + 1).padStart(2, "0")} / {String(tracks.length).padStart(2, "0")}</span>
+          </div>
 
-          {/* Progress bar */}
           <div
             onClick={handleSeek}
             style={{
@@ -311,40 +455,72 @@ function LocalPlayer({ src, title, artist }) {
           }}>
             <span>{fmtTime(currentTime)}</span>
             {error
-              ? <span style={{ color: "#FF1493" }}>FILE NOT FOUND — CHECK public/audio/</span>
+              ? <span style={{ color: "#FF1493" }}>FILE NOT FOUND</span>
               : <span>{fmtTime(duration)}</span>}
           </div>
         </div>
 
-        {/* Volume — hidden on small screens */}
-        <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#AAA", flexShrink: 0 }}
-             className="ai-king-volume">
+        <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#AAA", flexShrink: 0 }}>
           <VolumeIcon size={16} />
           <input
             type="range" min="0" max="1" step="0.01" value={volume}
             onChange={e => setVolume(parseFloat(e.target.value))}
             aria-label="Volume"
-            style={{
-              width: 70, accentColor: "#FF1493", cursor: "pointer",
-            }}
+            style={{ width: 70, accentColor: "#FF1493", cursor: "pointer" }}
           />
         </div>
       </div>
+
+      {tracks.length > 1 && (
+        <div style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}>
+          {tracks.map((t, i) => {
+            const active = i === currentIndex;
+            return (
+              <div key={t.src} onClick={() => select(i)} style={{
+                display: "flex", alignItems: "center", gap: 14, padding: "11px 22px",
+                borderBottom: i < tracks.length - 1 ? "1px solid rgba(255,255,255,0.04)" : "none",
+                background: active ? "rgba(255,20,147,0.08)" : "transparent",
+                cursor: "pointer", transition: "background 0.2s",
+              }}
+              onMouseEnter={e => { if (!active) e.currentTarget.style.background = "rgba(255,255,255,0.03)"; }}
+              onMouseLeave={e => { if (!active) e.currentTarget.style.background = "transparent"; }}
+              >
+                <span style={{
+                  fontFamily: "JetBrains Mono", fontSize: 11, fontWeight: 700,
+                  color: active ? "#FF1493" : "#666", width: 18, textAlign: "center",
+                }}>
+                  {active && isPlaying ? "♪" : String(i + 1).padStart(2, "0")}
+                </span>
+                <span style={{
+                  fontFamily: "Bebas Neue", fontSize: 15, letterSpacing: 3,
+                  color: active ? "#FFFFFF" : "#AAA", flex: 1,
+                }}>{t.title}</span>
+                {active && (
+                  <span style={{
+                    fontFamily: "JetBrains Mono", fontSize: 9, letterSpacing: 2,
+                    color: "#FF1493", animation: isPlaying ? "neonFlicker 5s infinite" : "none",
+                  }}>{isPlaying ? "PLAYING" : "SELECTED"}</span>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
     </PlayerShell>
   );
 }
 
-function MusicPlayer() {
+function MusicPlayer({ autoplay = false }) {
   const { type } = MUSIC_PLAYER;
 
   if (type === "local") {
-    const { src, title, artist } = MUSIC_PLAYER.local;
-    if (!src || src === "/audio/preview.mp3") {
+    const { tracks, artist } = MUSIC_PLAYER.local;
+    if (!tracks || tracks.length === 0) {
       return <PlaceholderPanel
-        hint="DROP AN MP3 INTO public/audio/ AND UPDATE"
-        codePath="MUSIC_PLAYER.local.src" />;
+        hint="DROP MP3s INTO public/audio/ AND ADD THEM TO"
+        codePath="MUSIC_PLAYER.local.tracks" />;
     }
-    return <LocalPlayer src={src} title={title} artist={artist} />;
+    return <LocalPlayer tracks={tracks} artist={artist} autoplay={autoplay} />;
   }
 
   if (type === "soundcloud") {
@@ -455,6 +631,133 @@ function TrackRow({ track, index }) {
   );
 }
 
+function EmailModal({ onClose }) {
+  const [email, setEmail] = useState("");
+  const [done, setDone] = useState(false);
+
+  const handleSubmit = () => {
+    if (!email) return;
+    // TODO: Connect to Mailchimp, ConvertKit, or your email service
+    console.log("New subscriber (modal):", email);
+    setDone(true);
+    setTimeout(onClose, 1400);
+  };
+
+  return (
+    <div
+      onClick={onClose}
+      style={{
+        position: "fixed", inset: 0, zIndex: 10000,
+        background: "rgba(0,0,0,0.85)",
+        backdropFilter: "blur(14px)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        padding: "24px",
+        animation: "fadeUp 0.4s ease",
+      }}
+    >
+      <div
+        onClick={e => e.stopPropagation()}
+        style={{
+          position: "relative",
+          maxWidth: 520, width: "100%",
+          padding: "44px 36px 36px",
+          background: "linear-gradient(180deg, rgba(15,5,16,0.98) 0%, rgba(8,4,10,0.98) 100%)",
+          border: "1px solid rgba(255,20,147,0.4)",
+          boxShadow: "0 0 80px rgba(255,20,147,0.35), 0 0 160px rgba(226,54,54,0.2), inset 0 0 0 1px rgba(255,215,0,0.12)",
+          textAlign: "center",
+        }}
+      >
+        <button
+          onClick={onClose}
+          aria-label="Close"
+          style={{
+            position: "absolute", top: 14, right: 14,
+            width: 36, height: 36, borderRadius: "50%",
+            background: "transparent", border: "1px solid rgba(255,255,255,0.18)",
+            color: "#CCC", display: "flex", alignItems: "center", justifyContent: "center",
+            cursor: "pointer", padding: 0,
+          }}
+        >
+          <CloseIcon size={16} />
+        </button>
+
+        <div style={{ marginBottom: 14 }}><Crown size={56} /></div>
+
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, marginBottom: 18 }}>
+          <div style={{ width: 30, height: 1, background: "linear-gradient(90deg, transparent, #FFD700)" }} />
+          <Globe size={18} />
+          <span style={{
+            fontFamily: "Cinzel, serif", fontSize: 11, fontWeight: 800, letterSpacing: 6,
+            color: "#FFD700", textShadow: "0 0 14px rgba(255,215,0,0.5)",
+          }}>THE WORLD IS YOURS</span>
+          <Globe size={18} />
+          <div style={{ width: 30, height: 1, background: "linear-gradient(270deg, transparent, #FFD700)" }} />
+        </div>
+
+        <h2 style={{
+          fontFamily: "Bebas Neue", fontSize: 38, letterSpacing: 6, color: "#FFFFFF",
+          margin: 0, marginBottom: 10, lineHeight: 1,
+          textShadow: "0 0 24px rgba(226,54,54,0.5)",
+        }}>JOIN THE INNER CIRCLE</h2>
+
+        <p style={{
+          fontFamily: "JetBrains Mono", fontSize: 11, color: "#BBB",
+          letterSpacing: 1.5, marginBottom: 26, lineHeight: 1.7,
+        }}>
+          Unreleased tracks. First-access drops. Direct from AI KING.<br/>
+          No spam. Leave any time.
+        </p>
+
+        {!done ? (
+          <>
+            <div style={{ display: "flex", marginBottom: 14 }}>
+              <input
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                onKeyDown={e => e.key === "Enter" && handleSubmit()}
+                placeholder="YOUR@EMAIL.COM"
+                type="email"
+                autoFocus
+                style={{
+                  flex: 1, padding: "16px 20px", background: "rgba(255,255,255,0.04)",
+                  border: "1px solid rgba(255,255,255,0.20)", borderRight: "none",
+                  color: "#FFFFFF", fontSize: 12, letterSpacing: 2,
+                  fontFamily: "JetBrains Mono", outline: "none",
+                }}
+              />
+              <button
+                onClick={handleSubmit}
+                style={{
+                  padding: "16px 28px", background: "#E23636", border: "1px solid #E23636",
+                  color: "#FFFFFF", fontSize: 12, fontWeight: 700, letterSpacing: 3,
+                  fontFamily: "JetBrains Mono", cursor: "pointer",
+                  boxShadow: "0 0 24px rgba(226,54,54,0.5)",
+                }}
+              >JOIN</button>
+            </div>
+            <button
+              onClick={onClose}
+              style={{
+                background: "transparent", border: "none",
+                fontFamily: "JetBrains Mono", fontSize: 10, letterSpacing: 3,
+                color: "#777", cursor: "pointer", textDecoration: "underline",
+                textUnderlineOffset: 4,
+              }}
+            >SKIP FOR NOW</button>
+          </>
+        ) : (
+          <div style={{
+            padding: 18, border: "1px solid #FF1493",
+            fontFamily: "JetBrains Mono", fontSize: 12, letterSpacing: 2, color: "#FF1493",
+          }}>
+            ✓ YOU'RE IN THE CIRCLE. WATCH YOUR INBOX.
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function EmailSignup() {
   const [email, setEmail] = useState("");
   const [done, setDone] = useState(false);
@@ -505,6 +808,31 @@ function EmailSignup() {
 
 export default function App() {
   const [section, setSection] = useState("home");
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [autoplayUnlocked, setAutoplayUnlocked] = useState(false);
+
+  // First-visit email modal — pops shortly after page load.
+  // Repeat visitors don't see it again (localStorage flag).
+  useEffect(() => {
+    const seen = typeof window !== "undefined" && localStorage.getItem("aiking_email_seen");
+    if (seen) {
+      // Returning visitor — autoplay is gated on next user click (browser policy).
+      const onFirstClick = () => setAutoplayUnlocked(true);
+      document.addEventListener("click", onFirstClick, { once: true });
+      return () => document.removeEventListener("click", onFirstClick);
+    }
+    // New visitor — show modal after brief delay so the page renders first.
+    const t = setTimeout(() => setShowEmailModal(true), 700);
+    return () => clearTimeout(t);
+  }, []);
+
+  const dismissEmailModal = () => {
+    setShowEmailModal(false);
+    setAutoplayUnlocked(true);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("aiking_email_seen", "1");
+    }
+  };
 
   return (
     <div style={{
@@ -611,29 +939,35 @@ export default function App() {
                 fontFamily: "JetBrains Mono", fontSize: 10, fontWeight: 700, letterSpacing: 5,
                 color: "#FF1493", marginBottom: 14, animation: "neonFlicker 5s infinite",
               }}>▶ NOW PLAYING</p>
-              <MusicPlayer />
+              <MusicPlayer autoplay={autoplayUnlocked} />
             </div>
 
             <div style={{ display: "flex", gap: 16, justifyContent: "center", marginTop: 50, flexWrap: "wrap" }}>
-              <button onClick={() => setSection("music")} style={{
+              <button onClick={() => setSection("links")} style={{
                 padding: "16px 40px", background: "#E23636", border: "none",
                 fontFamily: "Bebas Neue", fontSize: 18, letterSpacing: 5, color: "#FFFFFF", cursor: "pointer",
                 boxShadow: "0 0 32px rgba(226,54,54,0.55)",
-              }}>FULL CATALOG</button>
-              <button onClick={() => setSection("links")} style={{
-                padding: "16px 40px", background: "transparent",
-                border: "1px solid rgba(255,255,255,0.35)",
-                fontFamily: "Bebas Neue", fontSize: 18, letterSpacing: 5, color: "#EEE", cursor: "pointer",
               }}>ALL LINKS</button>
             </div>
 
-            <div style={{ display: "flex", gap: 18, justifyContent: "center", marginTop: 48, flexWrap: "wrap" }}>
+            {/* Social icons — recognizable brand marks */}
+            <div style={{ display: "flex", gap: 14, justifyContent: "center", marginTop: 44, flexWrap: "wrap" }}>
               {SOCIALS.map(s => (
-                <a key={s.name} href={s.url} target="_blank" rel="noreferrer" style={{
-                  fontFamily: "JetBrains Mono", fontSize: 12, fontWeight: 700,
-                  letterSpacing: 3, color: "#AAAAAA", textDecoration: "none",
-                  padding: "10px 16px", border: "1px solid #2a2a2a", transition: "all 0.25s",
-                }}>{s.abbr}</a>
+                <a key={s.name} href={s.url} target="_blank" rel="noreferrer"
+                  aria-label={s.name}
+                  title={s.name}
+                  style={{
+                    display: "inline-flex", alignItems: "center", gap: 10,
+                    fontFamily: "JetBrains Mono", fontSize: 11, fontWeight: 700,
+                    letterSpacing: 3, color: "#DDDDDD", textDecoration: "none",
+                    padding: "10px 16px",
+                    border: "1px solid rgba(255,255,255,0.18)",
+                    background: "rgba(255,255,255,0.03)",
+                    transition: "all 0.25s",
+                  }}>
+                  <BrandIcon name={s.icon} size={20} />
+                  <span>{s.name.toUpperCase()}</span>
+                </a>
               ))}
             </div>
           </div>
@@ -650,23 +984,30 @@ export default function App() {
 
             {/* Featured player at top of catalog */}
             <div style={{ marginBottom: 40 }}>
-              <MusicPlayer />
+              <MusicPlayer autoplay={autoplayUnlocked} />
             </div>
 
             <div style={{ border: "1px solid rgba(255,255,255,0.10)", background: "rgba(255,255,255,0.02)" }}>
               {TRACKS.map((t, i) => <TrackRow key={t.id} track={t} index={i} />)}
             </div>
             <div style={{ marginTop: 32, textAlign: "center" }}>
-              <p style={{ fontFamily: "JetBrains Mono", fontSize: 10, letterSpacing: 3, color: "#888", marginBottom: 14 }}>
+              <p style={{ fontFamily: "JetBrains Mono", fontSize: 10, letterSpacing: 3, color: "#AAA", marginBottom: 14 }}>
                 STREAM EVERYWHERE
               </p>
               <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
                 {STREAMING.map(s => (
-                  <a key={s.name} href={s.url} style={{
-                    fontFamily: "JetBrains Mono", fontSize: 10, letterSpacing: 2,
-                    color: "#AAAAAA", textDecoration: "none", padding: "6px 12px",
-                    border: "1px solid #2a2a2a", transition: "all 0.2s",
-                  }}>{s.name.toUpperCase()}</a>
+                  <a key={s.name} href={s.url} target="_blank" rel="noreferrer"
+                    aria-label={s.name} title={s.name}
+                    style={{
+                      display: "inline-flex", alignItems: "center", gap: 8,
+                      fontFamily: "JetBrains Mono", fontSize: 10, letterSpacing: 2,
+                      color: "#DDDDDD", textDecoration: "none", padding: "8px 12px",
+                      border: "1px solid rgba(255,255,255,0.18)",
+                      background: "rgba(255,255,255,0.03)", transition: "all 0.2s",
+                    }}>
+                    <BrandIcon name={s.icon} size={16} />
+                    <span>{s.name.toUpperCase()}</span>
+                  </a>
                 ))}
               </div>
             </div>
@@ -704,23 +1045,52 @@ export default function App() {
 
         {/* ===== LINKS (Link-in-Bio) ===== */}
         {section === "links" && (
-          <div style={{ padding: "80px 0", animation: "fadeUp 0.6s ease", maxWidth: 440, margin: "0 auto" }}>
+          <div style={{ padding: "80px 0", animation: "fadeUp 0.6s ease", maxWidth: 460, margin: "0 auto" }}>
             <div style={{ textAlign: "center", marginBottom: 36 }}>
               <Crown size={36} />
               <h2 style={{ fontFamily: "Bebas Neue", fontSize: 38, letterSpacing: 6, color: "#FFFFFF", marginTop: 10 }}>ALL LINKS</h2>
             </div>
-            {[
-              ...SOCIALS,
-              ...STREAMING.map(s => ({ name: s.name, url: s.url })),
-            ].map((link, i) => (
-              <a key={i} href={link.url} target="_blank" rel="noreferrer" style={{
-                display: "block", padding: "16px 24px", marginBottom: 8,
-                border: "1px solid rgba(255,255,255,0.14)",
+
+            <div style={{
+              fontFamily: "JetBrains Mono", fontSize: 9, letterSpacing: 4, color: "#FF1493",
+              marginBottom: 14, marginTop: 8,
+            }}>— SOCIAL —</div>
+
+            {SOCIALS.map((link) => (
+              <a key={link.name} href={link.url} target="_blank" rel="noreferrer" style={{
+                display: "flex", alignItems: "center", gap: 16,
+                padding: "16px 22px", marginBottom: 10,
+                border: "1px solid rgba(255,255,255,0.16)",
                 background: "rgba(255,255,255,0.03)",
-                textDecoration: "none", textAlign: "center",
-                fontFamily: "Bebas Neue", fontSize: 19, letterSpacing: 4, color: "#EEEEEE",
+                textDecoration: "none",
+                fontFamily: "Bebas Neue", fontSize: 20, letterSpacing: 4, color: "#FFFFFF",
                 transition: "all 0.25s",
-              }}>{link.name.toUpperCase()}</a>
+              }}>
+                <BrandIcon name={link.icon} size={26} />
+                <span style={{ flex: 1 }}>{link.name.toUpperCase()}</span>
+                <span style={{ fontFamily: "JetBrains Mono", fontSize: 11, color: "#FF1493", letterSpacing: 2 }}>→</span>
+              </a>
+            ))}
+
+            <div style={{
+              fontFamily: "JetBrains Mono", fontSize: 9, letterSpacing: 4, color: "#FF1493",
+              marginBottom: 14, marginTop: 32,
+            }}>— STREAMING —</div>
+
+            {STREAMING.map((link) => (
+              <a key={link.name} href={link.url} target="_blank" rel="noreferrer" style={{
+                display: "flex", alignItems: "center", gap: 16,
+                padding: "16px 22px", marginBottom: 10,
+                border: "1px solid rgba(255,255,255,0.16)",
+                background: "rgba(255,255,255,0.03)",
+                textDecoration: "none",
+                fontFamily: "Bebas Neue", fontSize: 20, letterSpacing: 4, color: "#FFFFFF",
+                transition: "all 0.25s",
+              }}>
+                <BrandIcon name={link.icon} size={26} />
+                <span style={{ flex: 1 }}>{link.name.toUpperCase()}</span>
+                <span style={{ fontFamily: "JetBrains Mono", fontSize: 11, color: "#FF1493", letterSpacing: 2 }}>→</span>
+              </a>
             ))}
           </div>
         )}
@@ -744,6 +1114,9 @@ export default function App() {
           </p>
         </footer>
       </div>
+
+      {/* ===== EMAIL TAKE-OVER MODAL ===== */}
+      {showEmailModal && <EmailModal onClose={dismissEmailModal} />}
     </div>
   );
 }
