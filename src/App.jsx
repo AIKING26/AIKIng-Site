@@ -28,8 +28,8 @@ const MUSIC_PLAYER = {
   // 2) Reference it below. The path starts at /audio/...
   // 3) Push to GitHub → Vercel auto-redeploys.
   local: {
-    src: "/audio/preview.mp3",        // Replace with your file path
-    title: "PREVIEW DROP",            // Track title shown in the player
+    src: "/audio/get-away-freestyle.mp3",
+    title: "GET AWAY (FREESTYLE)",
     artist: "AI KING",
   },
 
