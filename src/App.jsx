@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 
 /*
   ========================================
@@ -7,15 +7,49 @@ import { useState } from "react";
   Update these values with your real info:
 */
 
-// MUSIC PLAYER — Free host embed for the landing page
-// SoundCloud is recommended for unreleased / preview drops (free uploads, free embed).
-// Switch `type` to "spotify" or "youtube" once your track is on streaming.
+// MUSIC PLAYER — Multi-source. Pick ONE `type` and fill in that section.
+//
+//   "local"      → Self-hosted MP3 in this repo's public/audio/ folder.
+//                  Custom player UI, full control, zero third-party branding,
+//                  unlimited control over unreleased tracks. RECOMMENDED.
+//
+//   "soundcloud" → SoundCloud unlisted/private track. Built-in waveform UI.
+//                  Good if you want fans to be able to like/repost.
+//
+//   "spotify"    → Spotify track embed. Only works once track is publicly released.
+//
+//   "youtube"    → YouTube video embed. Works for music videos / lyric videos.
+//
 const MUSIC_PLAYER = {
-  type: "soundcloud", // "soundcloud" | "spotify" | "youtube"
-  // SoundCloud: paste the full track URL, e.g. "https://soundcloud.com/officialaiking/see-it-all-be-it-all"
-  // Spotify:    paste the full track URL, e.g. "https://open.spotify.com/track/XXXXXXXXX"
-  // YouTube:    paste ONLY the video ID, e.g. "dQw4w9WgXcQ"
-  url: "https://soundcloud.com/officialaiking",
+  type: "local",
+
+  // ---- type: "local" ----
+  // 1) Drop your MP3 into  public/audio/  (e.g. public/audio/preview.mp3)
+  // 2) Reference it below. The path starts at /audio/...
+  // 3) Push to GitHub → Vercel auto-redeploys.
+  local: {
+    src: "/audio/preview.mp3",        // Replace with your file path
+    title: "PREVIEW DROP",            // Track title shown in the player
+    artist: "AI KING",
+  },
+
+  // ---- type: "soundcloud" ----
+  // Paste the full track URL from SoundCloud (private/unlisted tracks work fine):
+  soundcloud: {
+    url: "https://soundcloud.com/officialaiking/your-track",
+  },
+
+  // ---- type: "spotify" ----
+  // Paste the full track URL from Spotify, e.g. https://open.spotify.com/track/XXXXXXXXX
+  spotify: {
+    url: "https://open.spotify.com/track/YOUR_TRACK_ID",
+  },
+
+  // ---- type: "youtube" ----
+  // Paste ONLY the video ID (the part after v= in the URL), e.g. "dQw4w9WgXcQ"
+  youtube: {
+    videoId: "YOUR_VIDEO_ID",
+  },
 };
 
 // STRIPE: Create Payment Links in your Stripe Dashboard for each track
@@ -136,63 +170,240 @@ function PalmTree({ side = "left" }) {
   );
 }
 
-function MusicPlayer() {
-  const { type, url } = MUSIC_PLAYER;
-  const isPlaceholder =
-    !url ||
-    url === "https://soundcloud.com/officialaiking" ||
-    url.includes("YOUR_") ||
-    url.trim() === "";
+const PlayerShell = ({ children }) => (
+  <div style={{
+    maxWidth: 640, margin: "0 auto",
+    border: "1px solid rgba(255,20,147,0.35)",
+    boxShadow: "0 0 60px rgba(255,20,147,0.18), 0 0 120px rgba(226,54,54,0.12), inset 0 0 0 1px rgba(255,215,0,0.08)",
+    background: "rgba(0,0,0,0.65)",
+  }}>{children}</div>
+);
 
-  if (isPlaceholder) {
-    return (
-      <div style={{
-        maxWidth: 640, margin: "0 auto", padding: "28px 24px",
-        border: "1px dashed rgba(255,20,147,0.4)",
-        background: "linear-gradient(135deg, rgba(255,20,147,0.04), rgba(255,165,0,0.04))",
-        textAlign: "center",
-      }}>
-        <p style={{ fontFamily: "JetBrains Mono", fontSize: 11, letterSpacing: 3, color: "#FF1493", margin: 0 }}>
-          ▶ DROP YOUR SOUNDCLOUD TRACK URL IN <code style={{ color: "#FFD700" }}>MUSIC_PLAYER.url</code>
-        </p>
-        <p style={{ fontFamily: "JetBrains Mono", fontSize: 10, letterSpacing: 2, color: "#888", marginTop: 10 }}>
-          Free host. Free embed. Push the change → Vercel redeploys.
-        </p>
+const PlaceholderPanel = ({ codePath, hint }) => (
+  <div style={{
+    maxWidth: 640, margin: "0 auto", padding: "28px 24px",
+    border: "1px dashed rgba(255,20,147,0.4)",
+    background: "linear-gradient(135deg, rgba(255,20,147,0.04), rgba(255,165,0,0.04))",
+    textAlign: "center",
+  }}>
+    <p style={{ fontFamily: "JetBrains Mono", fontSize: 11, letterSpacing: 3, color: "#FF1493", margin: 0 }}>
+      ▶ {hint} <code style={{ color: "#FFD700" }}>{codePath}</code>
+    </p>
+    <p style={{ fontFamily: "JetBrains Mono", fontSize: 10, letterSpacing: 2, color: "#AAA", marginTop: 10 }}>
+      Push the change → Vercel auto-redeploys.
+    </p>
+  </div>
+);
+
+const PlayIcon = ({ size = 22 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+);
+const PauseIcon = ({ size = 22 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
+    <rect x="6" y="5" width="4" height="14"/><rect x="14" y="5" width="4" height="14"/>
+  </svg>
+);
+const VolumeIcon = ({ size = 16 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
+    <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4z"/>
+  </svg>
+);
+
+function fmtTime(s) {
+  if (!s || isNaN(s) || !isFinite(s)) return "0:00";
+  const m = Math.floor(s / 60);
+  const sec = Math.floor(s % 60);
+  return `${m}:${sec.toString().padStart(2, "0")}`;
+}
+
+function LocalPlayer({ src, title, artist }) {
+  const audioRef = useRef(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [volume, setVolume] = useState(0.85);
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    if (audioRef.current) audioRef.current.volume = volume;
+  }, [volume]);
+
+  const togglePlay = () => {
+    if (!audioRef.current) return;
+    if (isPlaying) audioRef.current.pause();
+    else audioRef.current.play().catch(() => setError(true));
+  };
+
+  const handleSeek = (e) => {
+    if (!audioRef.current || !duration) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    audioRef.current.currentTime = pct * duration;
+    setCurrentTime(pct * duration);
+  };
+
+  const progressPct = duration ? (currentTime / duration) * 100 : 0;
+
+  return (
+    <PlayerShell>
+      <audio
+        ref={audioRef}
+        src={src}
+        preload="metadata"
+        onTimeUpdate={() => setCurrentTime(audioRef.current?.currentTime || 0)}
+        onLoadedMetadata={() => setDuration(audioRef.current?.duration || 0)}
+        onPlay={() => setIsPlaying(true)}
+        onPause={() => setIsPlaying(false)}
+        onEnded={() => { setIsPlaying(false); setCurrentTime(0); }}
+        onError={() => setError(true)}
+      />
+
+      <div style={{ display: "flex", alignItems: "center", gap: 18, padding: "20px 22px" }}>
+        {/* Big play / pause */}
+        <button
+          onClick={togglePlay}
+          aria-label={isPlaying ? "Pause" : "Play"}
+          style={{
+            flexShrink: 0,
+            width: 60, height: 60, borderRadius: "50%",
+            background: "#E23636", border: "none", color: "#FFF",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            cursor: "pointer",
+            boxShadow: "0 0 24px rgba(226,54,54,0.6), 0 0 48px rgba(255,20,147,0.25)",
+            transition: "transform 0.15s, box-shadow 0.15s",
+          }}
+          onMouseEnter={e => e.currentTarget.style.transform = "scale(1.06)"}
+          onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
+        >
+          {isPlaying ? <PauseIcon size={24} /> : <PlayIcon size={24} />}
+        </button>
+
+        {/* Track info + progress */}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{
+            fontFamily: "Bebas Neue", fontSize: 22, letterSpacing: 4, color: "#FFFFFF",
+            whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+          }}>{title}</div>
+          <div style={{
+            fontFamily: "JetBrains Mono", fontSize: 10, letterSpacing: 3, color: "#FFD700",
+            marginBottom: 12, marginTop: 2,
+          }}>{artist}</div>
+
+          {/* Progress bar */}
+          <div
+            onClick={handleSeek}
+            style={{
+              position: "relative", height: 6, background: "rgba(255,255,255,0.12)",
+              cursor: "pointer", borderRadius: 3, overflow: "hidden",
+            }}
+          >
+            <div style={{
+              position: "absolute", inset: 0, width: `${progressPct}%`,
+              background: "linear-gradient(90deg, #E23636 0%, #FF1493 60%, #FFA500 100%)",
+              boxShadow: "0 0 12px rgba(255,20,147,0.6)",
+              transition: "width 0.1s linear",
+            }} />
+          </div>
+
+          <div style={{
+            display: "flex", justifyContent: "space-between", marginTop: 6,
+            fontFamily: "JetBrains Mono", fontSize: 10, color: "#BBB", letterSpacing: 1,
+          }}>
+            <span>{fmtTime(currentTime)}</span>
+            {error
+              ? <span style={{ color: "#FF1493" }}>FILE NOT FOUND — CHECK public/audio/</span>
+              : <span>{fmtTime(duration)}</span>}
+          </div>
+        </div>
+
+        {/* Volume — hidden on small screens */}
+        <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#AAA", flexShrink: 0 }}
+             className="ai-king-volume">
+          <VolumeIcon size={16} />
+          <input
+            type="range" min="0" max="1" step="0.01" value={volume}
+            onChange={e => setVolume(parseFloat(e.target.value))}
+            aria-label="Volume"
+            style={{
+              width: 70, accentColor: "#FF1493", cursor: "pointer",
+            }}
+          />
+        </div>
       </div>
+    </PlayerShell>
+  );
+}
+
+function MusicPlayer() {
+  const { type } = MUSIC_PLAYER;
+
+  if (type === "local") {
+    const { src, title, artist } = MUSIC_PLAYER.local;
+    if (!src || src === "/audio/preview.mp3") {
+      return <PlaceholderPanel
+        hint="DROP AN MP3 INTO public/audio/ AND UPDATE"
+        codePath="MUSIC_PLAYER.local.src" />;
+    }
+    return <LocalPlayer src={src} title={title} artist={artist} />;
+  }
+
+  if (type === "soundcloud") {
+    const { url } = MUSIC_PLAYER.soundcloud;
+    if (!url || url.includes("your-track") || url.includes("YOUR_")) {
+      return <PlaceholderPanel
+        hint="PASTE YOUR SOUNDCLOUD URL IN"
+        codePath="MUSIC_PLAYER.soundcloud.url" />;
+    }
+    const src = `https://w.soundcloud.com/player/?url=${encodeURIComponent(url)}&color=%23E23636&auto_play=false&hide_related=true&show_comments=false&show_user=true&show_reposts=false&show_teaser=false&visual=true`;
+    return (
+      <PlayerShell>
+        <iframe width="100%" height={320} scrolling="no" frameBorder="no"
+          allow="autoplay" src={src} title="AI KING — SoundCloud"
+          style={{ display: "block", border: 0 }} />
+      </PlayerShell>
     );
   }
 
-  let src = "";
-  let height = 200;
-
-  if (type === "soundcloud") {
-    src = `https://w.soundcloud.com/player/?url=${encodeURIComponent(url)}&color=%23E23636&auto_play=false&hide_related=true&show_comments=false&show_user=true&show_reposts=false&show_teaser=false&visual=true`;
-    height = 320;
-  } else if (type === "spotify") {
-    const id = url.split("/track/")[1]?.split("?")[0] ?? "";
-    src = `https://open.spotify.com/embed/track/${id}?utm_source=generator&theme=0`;
-    height = 152;
-  } else if (type === "youtube") {
-    src = `https://www.youtube.com/embed/${url}?rel=0&modestbranding=1`;
-    height = 360;
+  if (type === "spotify") {
+    const { url } = MUSIC_PLAYER.spotify;
+    const id = url?.split("/track/")[1]?.split("?")[0];
+    if (!id || id === "YOUR_TRACK_ID") {
+      return <PlaceholderPanel
+        hint="PASTE YOUR SPOTIFY TRACK URL IN"
+        codePath="MUSIC_PLAYER.spotify.url" />;
+    }
+    return (
+      <PlayerShell>
+        <iframe width="100%" height={152} scrolling="no" frameBorder="no"
+          allow="encrypted-media"
+          src={`https://open.spotify.com/embed/track/${id}?utm_source=generator&theme=0`}
+          title="AI KING — Spotify"
+          style={{ display: "block", border: 0 }} />
+      </PlayerShell>
+    );
   }
 
-  return (
-    <div style={{
-      maxWidth: 640, margin: "0 auto",
-      border: "1px solid rgba(255,20,147,0.35)",
-      boxShadow: "0 0 60px rgba(255,20,147,0.18), 0 0 120px rgba(226,54,54,0.12), inset 0 0 0 1px rgba(255,215,0,0.08)",
-      background: "rgba(0,0,0,0.65)", padding: 4,
-    }}>
-      <iframe
-        width="100%" height={height}
-        scrolling="no" frameBorder="no" allow="autoplay; encrypted-media"
-        src={src}
-        title="AI KING — Now Playing"
-        style={{ display: "block", border: 0 }}
-      />
-    </div>
-  );
+  if (type === "youtube") {
+    const { videoId } = MUSIC_PLAYER.youtube;
+    if (!videoId || videoId === "YOUR_VIDEO_ID") {
+      return <PlaceholderPanel
+        hint="PASTE YOUR YOUTUBE VIDEO ID IN"
+        codePath="MUSIC_PLAYER.youtube.videoId" />;
+    }
+    return (
+      <PlayerShell>
+        <iframe width="100%" height={360} scrolling="no" frameBorder="no"
+          allow="autoplay; encrypted-media"
+          src={`https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1`}
+          title="AI KING — YouTube"
+          style={{ display: "block", border: 0 }} />
+      </PlayerShell>
+    );
+  }
+
+  return <PlaceholderPanel
+    hint="UNKNOWN PLAYER TYPE — SET ONE OF: local | soundcloud | spotify | youtube IN"
+    codePath="MUSIC_PLAYER.type" />;
 }
 
 function TrackRow({ track, index }) {
