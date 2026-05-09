@@ -1,32 +1,42 @@
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 
 /*
-  =============================================
-  AI KING — LINK-IN-BIO LANDING PAGE
-  =============================================
-  
-  CONFIGURATION: Update these with your real links
-  
-  MUSIC PLAYER: Add your audio file URLs below.
-  Options for hosting your audio:
-  1. SoundCloud embed URLs (free)
-  2. Direct .mp3 links hosted on Google Drive, Dropbox, or S3
-  3. Spotify embed (see STREAMING_EMBEDS below)
-  
-  STRIPE: Add your Stripe Payment Links when ready
+  ========================================
+  AI KING — CONFIGURATION
+  ========================================
+  Update these values with your real info:
 */
 
-const CONFIG = {
-  artistName: "AI KING",
-  tagline: "INDEPENDENT HIP-HOP. UNFILTERED. DIRECT TO YOU.",
-  bookingEmail: "DM on Instagram",
+// MUSIC PLAYER — Free host embed for the landing page
+// SoundCloud is recommended for unreleased / preview drops (free uploads, free embed).
+// Switch `type` to "spotify" or "youtube" once your track is on streaming.
+const MUSIC_PLAYER = {
+  type: "soundcloud", // "soundcloud" | "spotify" | "youtube"
+  // SoundCloud: paste the full track URL, e.g. "https://soundcloud.com/officialaiking/see-it-all-be-it-all"
+  // Spotify:    paste the full track URL, e.g. "https://open.spotify.com/track/XXXXXXXXX"
+  // YouTube:    paste ONLY the video ID, e.g. "dQw4w9WgXcQ"
+  url: "https://soundcloud.com/officialaiking",
 };
 
+// STRIPE: Create Payment Links in your Stripe Dashboard for each track
+// Go to: dashboard.stripe.com → Payment Links → Create
+const STRIPE_LINKS = {
+  track1: "https://buy.stripe.com/YOUR_LINK_HERE",
+  track2: "https://buy.stripe.com/YOUR_LINK_HERE",
+  track3: "https://buy.stripe.com/YOUR_LINK_HERE",
+};
+
+const TRACKS = [
+  { id: 1, title: "See It All, Be It All", status: "COMING SOON", price: null, stripeLink: STRIPE_LINKS.track1 },
+  { id: 2, title: "How Long?", status: "COMING SOON", price: null, stripeLink: STRIPE_LINKS.track2 },
+  { id: 3, title: "All The Time", status: "COMING SOON", price: null, stripeLink: STRIPE_LINKS.track3 },
+];
+
 const SOCIALS = [
-  { name: "Instagram", icon: "IG", url: "https://instagram.com/OfficialAIKING", color: "#E1306C" },
-  { name: "TikTok", icon: "TT", url: "https://tiktok.com/@KingAI.Jay", color: "#00F2EA" },
-  { name: "YouTube", icon: "YT", url: "https://youtube.com/@OfficalAIKING", color: "#FF0000" },
-  { name: "X", icon: "X", url: "https://x.com/OfficialAIKING", color: "#ffffff" },
+  { name: "Instagram", abbr: "IG", url: "https://instagram.com/OfficialAIKING" },
+  { name: "TikTok", abbr: "TT", url: "https://tiktok.com/@KingAI.Jay" },
+  { name: "YouTube", abbr: "YT", url: "https://youtube.com/@OfficalAIKING" },
+  { name: "X", abbr: "X", url: "https://x.com/OfficialAIKING" },
 ];
 
 const STREAMING = [
@@ -37,71 +47,32 @@ const STREAMING = [
   { name: "Amazon Music", url: "#" },
 ];
 
-// Add your tracks here with audio URLs for the player
-// For now these are placeholders — replace with real audio URLs
-const PLAYER_TRACKS = [
-  { 
-    id: 1, 
-    title: "See It All, Be It All", 
-    duration: "3:24",
-    // Replace with your actual audio URL:
-    audioUrl: "", 
-  },
-  { 
-    id: 2, 
-    title: "How Long?", 
-    duration: "2:58",
-    audioUrl: "",
-  },
-  { 
-    id: 3, 
-    title: "All The Time", 
-    duration: "3:12",
-    audioUrl: "",
-  },
-];
+// ========================================
 
-// If you prefer a Spotify embed instead of custom player, paste your Spotify artist URI here:
-// Example: "https://open.spotify.com/embed/artist/YOUR_ARTIST_ID?theme=0"
-const SPOTIFY_EMBED_URL = "";
-
-const STRIPE_LINK = ""; // Your Stripe storefront link when ready
-
-// =============================================
-// FONTS & ANIMATIONS
-// =============================================
-
-const fonts = `@import url('https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=JetBrains+Mono:wght@400;700&family=Inter:wght@300;400;500&display=swap');`;
+const fonts = `@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=JetBrains+Mono:wght@400;700&family=Inter:wght@300;400;600&family=Cinzel:wght@600;800&display=swap');`;
 
 const keyframes = `
-@keyframes fadeUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-@keyframes slideUp { from { opacity: 0; transform: translateY(100%); } to { opacity: 1; transform: translateY(0); } }
-@keyframes slideDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes crownFloat { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-8px) rotate(3deg); } }
-@keyframes glow { 0%, 100% { text-shadow: 0 0 30px rgba(226,54,54,.2); } 50% { text-shadow: 0 0 60px rgba(226,54,54,.5), 0 0 120px rgba(226,54,54,.15); } }
-@keyframes pulseRing { 0% { transform: scale(1); opacity: 0.6; } 100% { transform: scale(1.8); opacity: 0; } }
-@keyframes eqBar1 { 0% { height: 4px; } 50% { height: 20px; } 100% { height: 4px; } }
-@keyframes eqBar2 { 0% { height: 12px; } 50% { height: 6px; } 100% { height: 12px; } }
-@keyframes eqBar3 { 0% { height: 8px; } 50% { height: 22px; } 100% { height: 8px; } }
-@keyframes grain { 0%,100%{transform:translate(0,0)} 20%{transform:translate(-2%,-1%)} 40%{transform:translate(1%,2%)} 60%{transform:translate(-1%,1%)} 80%{transform:translate(2%,-1%)} }
-@keyframes borderGlow { 0%,100% { border-color: rgba(226,54,54,0.15); } 50% { border-color: rgba(226,54,54,0.4); } }
-@keyframes progressPulse { 0%,100% { opacity: 1; } 50% { opacity: 0.7; } }
-
-::selection { background: rgba(226,54,54,0.3); color: #fff; }
-* { margin: 0; padding: 0; box-sizing: border-box; }
-html { scroll-behavior: smooth; }
-body { background: #060606; overflow-x: hidden; }
+@keyframes fadeUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slideR{from{opacity:0;transform:translateX(-30px)}to{opacity:1;transform:translateX(0)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+@keyframes glow{0%,100%{text-shadow:0 0 25px rgba(226,54,54,.55),0 0 60px rgba(255,20,147,.15)}50%{text-shadow:0 0 55px rgba(226,54,54,.95),0 0 110px rgba(255,20,147,.45),0 0 160px rgba(255,165,0,.18)}}
+@keyframes neonFlicker{0%,100%{opacity:1;text-shadow:0 0 8px currentColor,0 0 18px currentColor}45%{opacity:.55}48%{opacity:.95}50%{opacity:.4}52%{opacity:1}}
+@keyframes grain{0%,100%{transform:translate(0,0)}20%{transform:translate(-2%,-1%)}40%{transform:translate(1%,2%)}60%{transform:translate(-1%,1%)}80%{transform:translate(2%,-1%)}}
+@keyframes crownFloat{0%,100%{transform:translateY(0) rotate(0deg)}50%{transform:translateY(-6px) rotate(2deg)}}
+@keyframes globeSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@keyframes sunsetPulse{0%,100%{opacity:.6}50%{opacity:.85}}
+@keyframes palmSway{0%,100%{transform:rotate(0deg)}50%{transform:rotate(1.2deg)}}
+@keyframes scrollMarquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+a:hover{color:#FF1493 !important;border-color:rgba(255,20,147,0.55) !important}
+button:hover{opacity:0.94;transform:translateY(-1px)}
+button{transition:all 0.2s ease}
+::selection{background:rgba(255,20,147,0.45);color:#fff}
 `;
-
-// =============================================
-// COMPONENTS
-// =============================================
 
 function Crown({ size = 32 }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 64 64" fill="none" style={{ animation: "crownFloat 3s ease-in-out infinite", filter: "drop-shadow(0 0 12px rgba(226,54,54,0.4))" }}>
-      <path d="M8 48L4 20L18 32L32 12L46 32L60 20L56 48H8Z" fill="#E23636" opacity="0.9"/>
+    <svg width={size} height={size} viewBox="0 0 64 64" fill="none" style={{ animation: "crownFloat 3s ease-in-out infinite" }}>
+      <path d="M8 48L4 20L18 32L32 12L46 32L60 20L56 48H8Z" fill="#E23636" opacity="0.95"/>
       <path d="M8 48H56V54H8V48Z" fill="#E23636"/>
       <circle cx="4" cy="20" r="3" fill="#FFD700"/>
       <circle cx="32" cy="12" r="3" fill="#FFD700"/>
@@ -110,563 +81,458 @@ function Crown({ size = 32 }) {
   );
 }
 
-function Equalizer({ playing }) {
-  if (!playing) return null;
+function Globe({ size = 24 }) {
   return (
-    <div style={{ display: "flex", alignItems: "flex-end", gap: 2, height: 22 }}>
-      {[1, 2, 3, 2, 1].map((_, i) => (
-        <div key={i} style={{
-          width: 3, borderRadius: 1, backgroundColor: "#E23636",
-          animation: `eqBar${(i % 3) + 1} 0.${4 + i}s ease-in-out infinite`,
-        }} />
-      ))}
+    <svg width={size} height={size} viewBox="0 0 64 64" style={{ display: "inline-block", verticalAlign: "middle", animation: "globeSpin 90s linear infinite" }}>
+      <defs>
+        <radialGradient id="globe-grad" cx="35%" cy="35%">
+          <stop offset="0%" stopColor="#FFE56A"/>
+          <stop offset="100%" stopColor="#B8860B"/>
+        </radialGradient>
+      </defs>
+      <circle cx="32" cy="32" r="28" fill="url(#globe-grad)" opacity="0.15"/>
+      <circle cx="32" cy="32" r="28" fill="none" stroke="#FFD700" strokeWidth="1.4"/>
+      <ellipse cx="32" cy="32" rx="28" ry="10" fill="none" stroke="#FFD700" strokeWidth="0.9" opacity="0.85"/>
+      <ellipse cx="32" cy="32" rx="14" ry="28" fill="none" stroke="#FFD700" strokeWidth="0.9" opacity="0.85"/>
+      <ellipse cx="32" cy="32" rx="22" ry="28" fill="none" stroke="#FFD700" strokeWidth="0.6" opacity="0.6"/>
+      <line x1="4" y1="32" x2="60" y2="32" stroke="#FFD700" strokeWidth="0.6" opacity="0.7"/>
+      <line x1="32" y1="4" x2="32" y2="60" stroke="#FFD700" strokeWidth="0.6" opacity="0.7"/>
+    </svg>
+  );
+}
+
+function PalmTree({ side = "left" }) {
+  return (
+    <div style={{
+      position: "fixed", bottom: 0, [side]: -10,
+      width: 220, height: 380, pointerEvents: "none", zIndex: 1,
+      transform: side === "right" ? "scaleX(-1)" : "none",
+      animation: "palmSway 7s ease-in-out infinite",
+      transformOrigin: "bottom center",
+      filter: "drop-shadow(0 0 12px rgba(255,20,147,0.18))",
+    }}>
+      <svg width="100%" height="100%" viewBox="0 0 220 380">
+        {/* Trunk */}
+        <path d="M108 380 Q112 280 116 200 Q120 130 124 80"
+          stroke="#000" strokeWidth="7" fill="none" strokeLinecap="round" />
+        <path d="M108 380 Q112 280 116 200 Q120 130 124 80"
+          stroke="#1a0a14" strokeWidth="3" fill="none" strokeLinecap="round" />
+        {/* Fronds — 7 leaves radiating from crown */}
+        <g fill="#000">
+          <path d="M124 80 Q70 50 10 60 Q50 60 90 88 Q115 92 124 80Z"/>
+          <path d="M124 80 Q180 50 215 75 Q175 70 138 92 Q126 86 124 80Z"/>
+          <path d="M124 80 Q95 30 50 18 Q90 50 112 76 Q120 80 124 80Z"/>
+          <path d="M124 80 Q145 30 195 18 Q160 50 132 76 Q126 80 124 80Z"/>
+          <path d="M124 80 Q120 25 125 5 Q126 35 126 75 Q125 80 124 80Z"/>
+          <path d="M124 80 Q60 80 5 110 Q60 90 100 88 Q120 86 124 80Z"/>
+          <path d="M124 80 Q190 80 218 115 Q175 88 145 90 Q128 86 124 80Z"/>
+        </g>
+        {/* Coconuts cluster */}
+        <circle cx="118" cy="78" r="3.5" fill="#1a0a08"/>
+        <circle cx="126" cy="82" r="3.5" fill="#1a0a08"/>
+        <circle cx="122" cy="86" r="3.5" fill="#1a0a08"/>
+      </svg>
     </div>
   );
 }
 
 function MusicPlayer() {
-  const [currentTrack, setCurrentTrack] = useState(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const audioRef = useRef(null);
-  const progressInterval = useRef(null);
+  const { type, url } = MUSIC_PLAYER;
+  const isPlaceholder =
+    !url ||
+    url === "https://soundcloud.com/officialaiking" ||
+    url.includes("YOUR_") ||
+    url.trim() === "";
 
-  // If Spotify embed is configured, show that instead
-  if (SPOTIFY_EMBED_URL) {
+  if (isPlaceholder) {
     return (
-      <div style={{ animation: "fadeUp 0.6s ease 0.3s both" }}>
-        <iframe
-          src={SPOTIFY_EMBED_URL}
-          width="100%"
-          height="352"
-          frameBorder="0"
-          allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-          loading="lazy"
-          style={{ borderRadius: 12, border: "1px solid rgba(255,255,255,0.06)" }}
-        />
+      <div style={{
+        maxWidth: 640, margin: "0 auto", padding: "28px 24px",
+        border: "1px dashed rgba(255,20,147,0.4)",
+        background: "linear-gradient(135deg, rgba(255,20,147,0.04), rgba(255,165,0,0.04))",
+        textAlign: "center",
+      }}>
+        <p style={{ fontFamily: "JetBrains Mono", fontSize: 11, letterSpacing: 3, color: "#FF1493", margin: 0 }}>
+          ▶ DROP YOUR SOUNDCLOUD TRACK URL IN <code style={{ color: "#FFD700" }}>MUSIC_PLAYER.url</code>
+        </p>
+        <p style={{ fontFamily: "JetBrains Mono", fontSize: 10, letterSpacing: 2, color: "#888", marginTop: 10 }}>
+          Free host. Free embed. Push the change → Vercel redeploys.
+        </p>
       </div>
     );
   }
 
-  const playTrack = (track) => {
-    if (currentTrack?.id === track.id && isPlaying) {
-      setIsPlaying(false);
-      if (audioRef.current) audioRef.current.pause();
-      clearInterval(progressInterval.current);
-      return;
-    }
+  let src = "";
+  let height = 200;
 
-    setCurrentTrack(track);
-    setIsPlaying(true);
-    setProgress(0);
-
-    if (track.audioUrl && audioRef.current) {
-      audioRef.current.src = track.audioUrl;
-      audioRef.current.play().catch(() => {});
-    } else {
-      // Demo mode: simulate playback progress
-      clearInterval(progressInterval.current);
-      progressInterval.current = setInterval(() => {
-        setProgress(prev => {
-          if (prev >= 100) {
-            clearInterval(progressInterval.current);
-            setIsPlaying(false);
-            return 0;
-          }
-          return prev + 0.5;
-        });
-      }, 150);
-    }
-  };
-
-  useEffect(() => {
-    return () => clearInterval(progressInterval.current);
-  }, []);
+  if (type === "soundcloud") {
+    src = `https://w.soundcloud.com/player/?url=${encodeURIComponent(url)}&color=%23E23636&auto_play=false&hide_related=true&show_comments=false&show_user=true&show_reposts=false&show_teaser=false&visual=true`;
+    height = 320;
+  } else if (type === "spotify") {
+    const id = url.split("/track/")[1]?.split("?")[0] ?? "";
+    src = `https://open.spotify.com/embed/track/${id}?utm_source=generator&theme=0`;
+    height = 152;
+  } else if (type === "youtube") {
+    src = `https://www.youtube.com/embed/${url}?rel=0&modestbranding=1`;
+    height = 360;
+  }
 
   return (
     <div style={{
-      border: "1px solid rgba(226,54,54,0.12)",
-      background: "rgba(226,54,54,0.02)",
-      backdropFilter: "blur(20px)",
-      overflow: "hidden",
-      animation: "fadeUp 0.6s ease 0.3s both",
+      maxWidth: 640, margin: "0 auto",
+      border: "1px solid rgba(255,20,147,0.35)",
+      boxShadow: "0 0 60px rgba(255,20,147,0.18), 0 0 120px rgba(226,54,54,0.12), inset 0 0 0 1px rgba(255,215,0,0.08)",
+      background: "rgba(0,0,0,0.65)", padding: 4,
     }}>
-      <audio ref={audioRef} />
-
-      {/* Player header */}
-      <div style={{
-        padding: "16px 20px",
-        borderBottom: "1px solid rgba(255,255,255,0.04)",
-        display: "flex", alignItems: "center", justifyContent: "space-between",
-      }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{
-            width: 8, height: 8, borderRadius: "50%",
-            background: isPlaying ? "#E23636" : "#333",
-            boxShadow: isPlaying ? "0 0 12px rgba(226,54,54,0.6)" : "none",
-            transition: "all 0.3s",
-          }} />
-          <span style={{
-            fontFamily: "'JetBrains Mono'", fontSize: 10, letterSpacing: 3,
-            color: isPlaying ? "#E23636" : "#555",
-          }}>
-            {isPlaying ? "NOW PLAYING" : "PREVIEW TRACKS"}
-          </span>
-        </div>
-        <Equalizer playing={isPlaying} />
-      </div>
-
-      {/* Track list */}
-      {PLAYER_TRACKS.map((track, i) => {
-        const active = currentTrack?.id === track.id;
-        return (
-          <div key={track.id} onClick={() => playTrack(track)} style={{
-            display: "grid", gridTemplateColumns: "32px 1fr auto",
-            gap: 14, alignItems: "center",
-            padding: "14px 20px",
-            borderBottom: i < PLAYER_TRACKS.length - 1 ? "1px solid rgba(255,255,255,0.03)" : "none",
-            background: active ? "rgba(226,54,54,0.06)" : "transparent",
-            cursor: "pointer",
-            transition: "background 0.2s",
-          }}>
-            {/* Play/Pause icon */}
-            <div style={{
-              width: 32, height: 32, borderRadius: "50%",
-              border: `1px solid ${active ? "#E23636" : "#2a2a2a"}`,
-              display: "flex", alignItems: "center", justifyContent: "center",
-              transition: "all 0.25s",
-              position: "relative",
-            }}>
-              {active && isPlaying && (
-                <div style={{
-                  position: "absolute", inset: -4, borderRadius: "50%",
-                  border: "1px solid rgba(226,54,54,0.3)",
-                  animation: "pulseRing 1.5s ease-out infinite",
-                }} />
-              )}
-              <span style={{
-                fontFamily: "JetBrains Mono", fontSize: 10,
-                color: active ? "#E23636" : "#555",
-                marginLeft: active && isPlaying ? 0 : 2,
-              }}>
-                {active && isPlaying ? "❚❚" : "▶"}
-              </span>
-            </div>
-
-            {/* Track info */}
-            <div>
-              <div style={{
-                fontFamily: "'Dela Gothic One'", fontSize: 14, letterSpacing: 1,
-                color: active ? "#E23636" : "#ccc",
-                transition: "color 0.2s",
-              }}>{track.title}</div>
-              {active && isPlaying && (
-                <div style={{
-                  marginTop: 6, height: 2, background: "#1a1a1a",
-                  borderRadius: 1, overflow: "hidden",
-                }}>
-                  <div style={{
-                    height: "100%", background: "#E23636",
-                    width: `${progress}%`, transition: "width 0.15s linear",
-                    animation: "progressPulse 2s ease-in-out infinite",
-                  }} />
-                </div>
-              )}
-            </div>
-
-            {/* Duration */}
-            <span style={{
-              fontFamily: "'JetBrains Mono'", fontSize: 11, color: "#333",
-            }}>{track.duration}</span>
-          </div>
-        );
-      })}
+      <iframe
+        width="100%" height={height}
+        scrolling="no" frameBorder="no" allow="autoplay; encrypted-media"
+        src={src}
+        title="AI KING — Now Playing"
+        style={{ display: "block", border: 0 }}
+      />
     </div>
   );
 }
 
-function LinkButton({ name, url, icon, color, delay }) {
+function TrackRow({ track, index }) {
   const [hover, setHover] = useState(false);
+  const available = track.status === "OUT NOW";
+
+  const handleBuy = (e) => {
+    e.stopPropagation();
+    if (track.stripeLink && track.stripeLink !== "https://buy.stripe.com/YOUR_LINK_HERE") {
+      window.open(track.stripeLink, "_blank");
+    }
+  };
+
   return (
-    <a href={url} target="_blank" rel="noreferrer"
-      onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}
+    <div onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}
       style={{
-        display: "flex", alignItems: "center", justifyContent: "center",
-        gap: 12, padding: "18px 24px",
-        border: hover ? `1px solid ${color}40` : "1px solid rgba(255,255,255,0.06)",
-        background: hover ? `${color}08` : "rgba(255,255,255,0.015)",
-        textDecoration: "none",
-        transition: "all 0.3s ease",
-        animation: `fadeUp 0.5s ease ${delay}s both`,
-        position: "relative",
-        overflow: "hidden",
+        display: "grid", gridTemplateColumns: "36px 1fr auto auto",
+        gap: 16, alignItems: "center", padding: "18px 24px",
+        borderBottom: "1px solid rgba(255,255,255,0.08)",
+        background: hover ? "rgba(226,54,54,0.08)" : "transparent",
+        transition: "background 0.25s",
+        animation: `slideR 0.5s ease ${index * 0.08}s both`,
       }}>
-      {hover && (
-        <div style={{
-          position: "absolute", left: 0, top: 0, bottom: 0,
-          width: 3, background: color,
-        }} />
-      )}
-      {icon && (
-        <span style={{
-          fontFamily: "'JetBrains Mono'", fontSize: 11, fontWeight: 700,
-          color: hover ? color : "#555", letterSpacing: 2,
-          transition: "color 0.3s", minWidth: 28,
-        }}>{icon}</span>
-      )}
+      <span style={{ fontFamily: "JetBrains Mono", fontSize: 13, color: "#666", letterSpacing: 1 }}>
+        {String(index + 1).padStart(2, "0")}
+      </span>
+      <div style={{ fontFamily: "Bebas Neue", fontSize: 22, letterSpacing: 3, color: "#FFFFFF" }}>
+        {track.title}
+      </div>
       <span style={{
-        fontFamily: "'Dela Gothic One'", fontSize: 15, letterSpacing: 3,
-        color: hover ? "#f0f0f0" : "#aaa",
-        transition: "color 0.3s",
-      }}>{name.toUpperCase()}</span>
-    </a>
+        fontFamily: "JetBrains Mono", fontSize: 10, fontWeight: 700, letterSpacing: 3,
+        color: available ? "#FF1493" : "#888",
+        animation: !available ? "pulse 2.5s ease-in-out infinite" : "none",
+      }}>{track.status}</span>
+      {track.price ? (
+        <button onClick={handleBuy} style={{
+          background: hover ? "#E23636" : "transparent",
+          border: "1px solid #E23636", color: hover ? "#0A0A0A" : "#FF6B6B",
+          padding: "8px 20px", fontSize: 11, fontWeight: 700, letterSpacing: 2,
+          fontFamily: "JetBrains Mono", cursor: "pointer", transition: "all 0.25s",
+        }}>BUY ${track.price.toFixed(2)}</button>
+      ) : (
+        <span style={{
+          fontFamily: "JetBrains Mono", fontSize: 10, color: "#888", letterSpacing: 1,
+          padding: "8px 16px", border: "1px solid #2a2a2a",
+        }}>NOTIFY ME</span>
+      )}
+    </div>
   );
 }
 
-function EmailPopup({ onClose }) {
+function EmailSignup() {
   const [email, setEmail] = useState("");
   const [done, setDone] = useState(false);
 
   const handleSubmit = () => {
     if (!email) return;
-    // TODO: Connect to ConvertKit, Mailchimp, etc.
+    // TODO: Connect to Mailchimp, ConvertKit, or your email service
     console.log("New subscriber:", email);
     setDone(true);
-    setTimeout(onClose, 2000);
   };
 
   return (
-    <div style={{
-      position: "fixed", inset: 0, zIndex: 10000,
-      display: "flex", alignItems: "center", justifyContent: "center",
-      padding: 20,
-      animation: "fadeIn 0.4s ease",
-    }}>
-      {/* Backdrop */}
-      <div onClick={onClose} style={{
-        position: "absolute", inset: 0,
-        background: "rgba(0,0,0,0.85)",
-        backdropFilter: "blur(12px)",
-      }} />
-
-      {/* Modal */}
-      <div style={{
-        position: "relative",
-        width: "100%", maxWidth: 420,
-        background: "linear-gradient(180deg, #0e0e0e 0%, #0a0808 100%)",
-        border: "1px solid rgba(226,54,54,0.2)",
-        padding: "48px 36px",
-        textAlign: "center",
-        animation: "slideDown 0.5s ease",
-        boxShadow: "0 0 80px rgba(226,54,54,0.08), 0 40px 80px rgba(0,0,0,0.5)",
-      }}>
-        {/* Close button */}
-        <button onClick={onClose} style={{
-          position: "absolute", top: 16, right: 16,
-          background: "none", border: "none",
-          color: "#333", fontSize: 18, cursor: "pointer",
-          fontFamily: "'JetBrains Mono'",
-          transition: "color 0.2s",
-        }}>✕</button>
-
-        <Crown size={44} />
-
-        <h2 style={{
-          fontFamily: "'Dela Gothic One'", fontSize: 24,
-          color: "#E0E0E0", marginTop: 16, marginBottom: 8, letterSpacing: 2,
-        }}>JOIN THE INNER CIRCLE</h2>
-
-        <p style={{
-          fontFamily: "'JetBrains Mono'", fontSize: 11,
-          color: "#555", letterSpacing: 1, lineHeight: 1.6,
-          marginBottom: 28, maxWidth: 300, margin: "0 auto 28px",
-        }}>
-          Get unreleased tracks, first access to new drops, and exclusive content. Direct from AI KING.
-        </p>
-
-        {!done ? (
-          <>
-            <input
-              value={email} onChange={e => setEmail(e.target.value)}
-              onKeyDown={e => e.key === "Enter" && handleSubmit()}
-              placeholder="YOUR@EMAIL.COM"
-              type="email"
-              autoFocus
-              style={{
-                width: "100%", padding: "16px 20px",
-                background: "rgba(255,255,255,0.03)",
-                border: "1px solid rgba(255,255,255,0.08)",
-                color: "#E0E0E0", fontSize: 13, letterSpacing: 2,
-                fontFamily: "'JetBrains Mono'", outline: "none",
-                marginBottom: 12,
-                transition: "border-color 0.3s",
-              }}
-              onFocus={e => e.target.style.borderColor = "rgba(226,54,54,0.3)"}
-              onBlur={e => e.target.style.borderColor = "rgba(255,255,255,0.08)"}
-            />
-            <button onClick={handleSubmit} style={{
-              width: "100%", padding: "16px 0",
-              background: "#E23636", border: "none",
-              fontFamily: "'Dela Gothic One'", fontSize: 15,
-              letterSpacing: 4, color: "#0A0A0A", cursor: "pointer",
-              transition: "opacity 0.2s",
-            }}>JOIN NOW</button>
-            <button onClick={onClose} style={{
-              background: "none", border: "none",
-              fontFamily: "'JetBrains Mono'", fontSize: 10,
-              letterSpacing: 2, color: "#333", cursor: "pointer",
-              marginTop: 16, display: "block", margin: "16px auto 0",
-            }}>MAYBE LATER</button>
-          </>
-        ) : (
-          <div style={{
-            padding: 20,
-            border: "1px solid rgba(226,54,54,0.3)",
-            animation: "fadeUp 0.3s ease",
-          }}>
-            <div style={{ fontSize: 28, marginBottom: 10 }}>👑</div>
-            <p style={{
-              fontFamily: "'JetBrains Mono'", fontSize: 12,
-              letterSpacing: 2, color: "#E23636",
-            }}>YOU'RE IN THE CIRCLE</p>
-          </div>
-        )}
-      </div>
+    <div style={{ maxWidth: 540, margin: "0 auto", textAlign: "center" }}>
+      <Crown size={40} />
+      <h3 style={{ fontFamily: "Bebas Neue", fontSize: 32, letterSpacing: 6, color: "#FFFFFF", marginBottom: 6, marginTop: 12 }}>
+        THE INNER CIRCLE
+      </h3>
+      <p style={{ fontFamily: "JetBrains Mono", fontSize: 11, color: "#A0A0A0", letterSpacing: 1, marginBottom: 28 }}>
+        Unreleased tracks. First access drops. Direct from AI KING.
+      </p>
+      {!done ? (
+        <div style={{ display: "flex", maxWidth: 480, margin: "0 auto" }}>
+          <input value={email} onChange={e => setEmail(e.target.value)}
+            onKeyDown={e => e.key === "Enter" && handleSubmit()}
+            placeholder="YOUR@EMAIL.COM"
+            type="email"
+            style={{
+              flex: 1, padding: "16px 20px", background: "rgba(255,255,255,0.04)",
+              border: "1px solid rgba(255,255,255,0.18)", borderRight: "none",
+              color: "#FFFFFF", fontSize: 12, letterSpacing: 2,
+              fontFamily: "JetBrains Mono", outline: "none",
+            }} />
+          <button onClick={handleSubmit} style={{
+            padding: "16px 32px", background: "#E23636", border: "1px solid #E23636",
+            color: "#FFFFFF", fontSize: 12, fontWeight: 700, letterSpacing: 3,
+            fontFamily: "JetBrains Mono", cursor: "pointer",
+            boxShadow: "0 0 24px rgba(226,54,54,0.45)",
+          }}>JOIN</button>
+        </div>
+      ) : (
+        <div style={{ padding: 18, border: "1px solid #FF1493", fontFamily: "JetBrains Mono", fontSize: 12, letterSpacing: 2, color: "#FF1493" }}>
+          ✓ YOU'RE IN THE CIRCLE. WATCH YOUR INBOX.
+        </div>
+      )}
     </div>
   );
 }
 
-// =============================================
-// MAIN APP
-// =============================================
-
 export default function App() {
-  const [showPopup, setShowPopup] = useState(false);
-  const [popupDismissed, setPopupDismissed] = useState(false);
-
-  // Show email popup after 2 seconds on first visit
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      const dismissed = sessionStorage.getItem("aiking_popup_dismissed");
-      if (!dismissed) {
-        setShowPopup(true);
-      }
-    }, 2000);
-    return () => clearTimeout(timer);
-  }, []);
-
-  const dismissPopup = () => {
-    setShowPopup(false);
-    setPopupDismissed(true);
-    sessionStorage.setItem("aiking_popup_dismissed", "true");
-  };
+  const [section, setSection] = useState("home");
 
   return (
     <div style={{
       minHeight: "100vh",
-      background: "linear-gradient(180deg, #060606 0%, #080606 50%, #060606 100%)",
-      color: "#E0E0E0",
-      fontFamily: "'Inter', sans-serif",
-      position: "relative",
-      display: "flex",
-      flexDirection: "column",
-      alignItems: "center",
+      background: "linear-gradient(180deg, #0A0A0A 0%, #060409 45%, #0F0510 100%)",
+      color: "#E8E8E8", fontFamily: "Inter, sans-serif", position: "relative",
+      overflow: "hidden",
     }}>
       <style>{fonts}{keyframes}</style>
 
-      {/* Grain overlay */}
+      {/* Film grain overlay */}
       <div style={{
-        position: "fixed", inset: 0, pointerEvents: "none", zIndex: 9998, opacity: 0.025,
+        position: "fixed", inset: 0, pointerEvents: "none", zIndex: 9999, opacity: 0.045,
         backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E")`,
         animation: "grain 0.4s steps(3) infinite",
       }} />
 
-      {/* Ambient glow - top */}
+      {/* Miami sunset horizon — bottom of viewport */}
       <div style={{
-        position: "fixed", top: "-25%", left: "50%", transform: "translateX(-50%)",
-        width: "80%", height: "50%",
-        background: "radial-gradient(ellipse, rgba(226,54,54,0.06) 0%, transparent 60%)",
-        pointerEvents: "none",
+        position: "fixed", left: 0, right: 0, bottom: 0, height: 360,
+        background: "linear-gradient(180deg, transparent 0%, rgba(75,0,130,0.18) 25%, rgba(255,20,147,0.20) 55%, rgba(255,99,71,0.18) 80%, rgba(255,165,0,0.15) 100%)",
+        pointerEvents: "none", zIndex: 0,
+        animation: "sunsetPulse 8s ease-in-out infinite",
       }} />
 
-      {/* Ambient glow - bottom */}
+      {/* Ambient red glow — top right */}
       <div style={{
-        position: "fixed", bottom: "-20%", left: "50%", transform: "translateX(-50%)",
-        width: "60%", height: "40%",
-        background: "radial-gradient(ellipse, rgba(226,54,54,0.03) 0%, transparent 60%)",
-        pointerEvents: "none",
+        position: "fixed", top: "-20%", right: "-10%",
+        width: "55%", height: "55%",
+        background: "radial-gradient(circle, rgba(226,54,54,0.10) 0%, transparent 65%)",
+        pointerEvents: "none", zIndex: 0,
+      }} />
+      {/* Miami magenta glow — opposite side */}
+      <div style={{
+        position: "fixed", top: "10%", left: "-15%",
+        width: "50%", height: "55%",
+        background: "radial-gradient(circle, rgba(255,20,147,0.09) 0%, transparent 60%)",
+        pointerEvents: "none", zIndex: 0,
       }} />
 
-      {/* Email popup */}
-      {showPopup && <EmailPopup onClose={dismissPopup} />}
+      {/* Palm trees — only on landing */}
+      {section === "home" && (
+        <>
+          <PalmTree side="left" />
+          <PalmTree side="right" />
+        </>
+      )}
 
-      {/* Main content */}
-      <div style={{
-        width: "100%", maxWidth: 460,
-        padding: "60px 24px 40px",
-        display: "flex", flexDirection: "column", gap: 0,
+      {/* ===== NAVIGATION ===== */}
+      <nav style={{
+        display: "flex", justifyContent: "space-between", alignItems: "center",
+        padding: "20px 36px", position: "sticky", top: 0, zIndex: 100,
+        background: "rgba(8,6,12,0.92)", backdropFilter: "blur(24px)",
+        borderBottom: "1px solid rgba(255,20,147,0.10)",
       }}>
-
-        {/* Header / Identity */}
-        <div style={{
-          textAlign: "center",
-          marginBottom: 40,
-          animation: "fadeUp 0.6s ease",
-        }}>
-          <Crown size={52} />
-          <h1 style={{
-            fontFamily: "'Dela Gothic One'",
-            fontSize: "clamp(36px, 10vw, 52px)",
-            letterSpacing: 4,
-            color: "#E0E0E0",
-            marginTop: 12,
-            animation: "glow 4s ease-in-out infinite",
-            lineHeight: 1,
-          }}>AI KING</h1>
-          <p style={{
-            fontFamily: "'JetBrains Mono'", fontSize: 10,
-            letterSpacing: 4, color: "#3a3a3a", marginTop: 10,
-            lineHeight: 1.6,
-          }}>{CONFIG.tagline}</p>
+        <div onClick={() => setSection("home")} style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
+          <Crown size={26} />
+          <span style={{ fontFamily: "Bebas Neue", fontSize: 28, letterSpacing: 8, color: "#E23636", textShadow: "0 0 18px rgba(226,54,54,0.45)" }}>AI KING</span>
         </div>
-
-        {/* Music Player */}
-        <div style={{ marginBottom: 28 }}>
-          <div style={{
-            display: "flex", alignItems: "center", gap: 10, marginBottom: 14,
-          }}>
-            <span style={{
-              fontFamily: "'JetBrains Mono'", fontSize: 9,
-              letterSpacing: 3, color: "#E23636",
-            }}>MUSIC</span>
-            <div style={{ flex: 1, height: 1, background: "rgba(226,54,54,0.1)" }} />
-          </div>
-          <MusicPlayer />
+        <div style={{ display: "flex", gap: 28, alignItems: "center" }}>
+          {["MUSIC", "ABOUT", "LINKS"].map(s => (
+            <span key={s} onClick={() => setSection(s.toLowerCase())} style={{
+              fontFamily: "JetBrains Mono", fontSize: 11, letterSpacing: 3,
+              color: section === s.toLowerCase() ? "#FF1493" : "#999",
+              cursor: "pointer", transition: "color 0.2s",
+            }}>{s}</span>
+          ))}
         </div>
+      </nav>
 
-        {/* Social Links */}
-        <div style={{ marginBottom: 28 }}>
-          <div style={{
-            display: "flex", alignItems: "center", gap: 10, marginBottom: 14,
-          }}>
-            <span style={{
-              fontFamily: "'JetBrains Mono'", fontSize: 9,
-              letterSpacing: 3, color: "#555",
-            }}>CONNECT</span>
-            <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.04)" }} />
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            {SOCIALS.map((s, i) => (
-              <LinkButton key={s.name} {...s} delay={0.1 + i * 0.06} />
-            ))}
-          </div>
-        </div>
+      <div style={{ maxWidth: 920, margin: "0 auto", padding: "0 24px", position: "relative", zIndex: 2 }}>
 
-        {/* Streaming Links */}
-        <div style={{ marginBottom: 28 }}>
-          <div style={{
-            display: "flex", alignItems: "center", gap: 10, marginBottom: 14,
-          }}>
-            <span style={{
-              fontFamily: "'JetBrains Mono'", fontSize: 9,
-              letterSpacing: 3, color: "#555",
-            }}>STREAM</span>
-            <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.04)" }} />
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            {STREAMING.map((s, i) => (
-              <LinkButton key={s.name} name={s.name} url={s.url} color="#E23636" delay={0.4 + i * 0.06} />
-            ))}
-          </div>
-        </div>
+        {/* ===== HERO ===== */}
+        {section === "home" && (
+          <div style={{ textAlign: "center", padding: "90px 0 80px", position: "relative", animation: "fadeUp 0.8s ease" }}>
+            <div style={{ marginBottom: 18 }}><Crown size={64} /></div>
 
-        {/* Buy Music Link (when Stripe is ready) */}
-        {STRIPE_LINK && (
-          <div style={{ marginBottom: 28 }}>
-            <a href={STRIPE_LINK} target="_blank" rel="noreferrer" style={{
-              display: "flex", alignItems: "center", justifyContent: "center",
-              gap: 10, padding: "20px 24px",
-              background: "#E23636",
-              textDecoration: "none",
-              animation: "fadeUp 0.5s ease 0.8s both",
-              transition: "opacity 0.2s",
-            }}>
+            <h1 style={{
+              fontFamily: "Bebas Neue", fontSize: "clamp(60px, 12vw, 130px)",
+              letterSpacing: "0.18em", lineHeight: 0.92, color: "#FFFFFF",
+              animation: "glow 4s ease-in-out infinite", margin: "0 0 22px",
+            }}>AI KING</h1>
+
+            {/* THE WORLD IS YOURS — engraved-globe homage */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 14, marginBottom: 18, flexWrap: "wrap" }}>
+              <div style={{ width: 60, height: 1, background: "linear-gradient(90deg, transparent, #FFD700)" }} />
+              <Globe size={24} />
               <span style={{
-                fontFamily: "'Dela Gothic One'", fontSize: 16,
-                letterSpacing: 4, color: "#0A0A0A",
-              }}>BUY MUSIC DIRECT</span>
-            </a>
+                fontFamily: "Cinzel, serif", fontSize: 14, fontWeight: 800, letterSpacing: 8,
+                color: "#FFD700", textShadow: "0 0 18px rgba(255,215,0,0.55), 0 0 36px rgba(255,165,0,0.25)",
+              }}>THE WORLD IS YOURS</span>
+              <Globe size={24} />
+              <div style={{ width: 60, height: 1, background: "linear-gradient(270deg, transparent, #FFD700)" }} />
+            </div>
+
+            <p style={{
+              fontFamily: "JetBrains Mono", fontSize: 12, letterSpacing: 5,
+              color: "#B8B8B8", maxWidth: 480, margin: "0 auto",
+            }}>INDEPENDENT HIP-HOP. UNFILTERED. DIRECT TO YOU.</p>
+
+            {/* ===== MUSIC PLAYER ===== */}
+            <div style={{ marginTop: 50 }}>
+              <p style={{
+                fontFamily: "JetBrains Mono", fontSize: 10, fontWeight: 700, letterSpacing: 5,
+                color: "#FF1493", marginBottom: 14, animation: "neonFlicker 5s infinite",
+              }}>▶ NOW PLAYING</p>
+              <MusicPlayer />
+            </div>
+
+            <div style={{ display: "flex", gap: 16, justifyContent: "center", marginTop: 50, flexWrap: "wrap" }}>
+              <button onClick={() => setSection("music")} style={{
+                padding: "16px 40px", background: "#E23636", border: "none",
+                fontFamily: "Bebas Neue", fontSize: 18, letterSpacing: 5, color: "#FFFFFF", cursor: "pointer",
+                boxShadow: "0 0 32px rgba(226,54,54,0.55)",
+              }}>FULL CATALOG</button>
+              <button onClick={() => setSection("links")} style={{
+                padding: "16px 40px", background: "transparent",
+                border: "1px solid rgba(255,255,255,0.35)",
+                fontFamily: "Bebas Neue", fontSize: 18, letterSpacing: 5, color: "#EEE", cursor: "pointer",
+              }}>ALL LINKS</button>
+            </div>
+
+            <div style={{ display: "flex", gap: 18, justifyContent: "center", marginTop: 48, flexWrap: "wrap" }}>
+              {SOCIALS.map(s => (
+                <a key={s.name} href={s.url} target="_blank" rel="noreferrer" style={{
+                  fontFamily: "JetBrains Mono", fontSize: 12, fontWeight: 700,
+                  letterSpacing: 3, color: "#AAAAAA", textDecoration: "none",
+                  padding: "10px 16px", border: "1px solid #2a2a2a", transition: "all 0.25s",
+                }}>{s.abbr}</a>
+              ))}
+            </div>
           </div>
         )}
 
-        {/* Email signup (inline, in case they closed the popup) */}
-        {popupDismissed && (
-          <InlineEmailSignup />
+        {/* ===== MUSIC / CATALOG (only on /music) ===== */}
+        {section === "music" && (
+          <div style={{ padding: "60px 0 70px", animation: "fadeUp 0.6s ease" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 32 }}>
+              <h2 style={{ fontFamily: "Bebas Neue", fontSize: 38, letterSpacing: 6, color: "#FFFFFF", margin: 0 }}>CATALOG</h2>
+              <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.12)" }} />
+              <span style={{ fontFamily: "JetBrains Mono", fontSize: 9, letterSpacing: 2, color: "#888" }}>VIA TUNECORE</span>
+            </div>
+
+            {/* Featured player at top of catalog */}
+            <div style={{ marginBottom: 40 }}>
+              <MusicPlayer />
+            </div>
+
+            <div style={{ border: "1px solid rgba(255,255,255,0.10)", background: "rgba(255,255,255,0.02)" }}>
+              {TRACKS.map((t, i) => <TrackRow key={t.id} track={t} index={i} />)}
+            </div>
+            <div style={{ marginTop: 32, textAlign: "center" }}>
+              <p style={{ fontFamily: "JetBrains Mono", fontSize: 10, letterSpacing: 3, color: "#888", marginBottom: 14 }}>
+                STREAM EVERYWHERE
+              </p>
+              <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
+                {STREAMING.map(s => (
+                  <a key={s.name} href={s.url} style={{
+                    fontFamily: "JetBrains Mono", fontSize: 10, letterSpacing: 2,
+                    color: "#AAAAAA", textDecoration: "none", padding: "6px 12px",
+                    border: "1px solid #2a2a2a", transition: "all 0.2s",
+                  }}>{s.name.toUpperCase()}</a>
+                ))}
+              </div>
+            </div>
+          </div>
         )}
 
-        {/* Footer */}
-        <footer style={{
-          textAlign: "center", padding: "40px 0 20px",
-          borderTop: "1px solid rgba(255,255,255,0.03)",
-          marginTop: 20,
-        }}>
-          <p style={{
-            fontFamily: "'JetBrains Mono'", fontSize: 9,
-            letterSpacing: 3, color: "#1a1a1a",
-          }}>© 2026 AI KING — ALL RIGHTS RESERVED</p>
-          <p style={{
-            fontFamily: "'JetBrains Mono'", fontSize: 8,
-            letterSpacing: 2, color: "#111", marginTop: 6,
-          }}>OFFICIALAIKING.COM</p>
+        {/* ===== ABOUT ===== */}
+        {section === "about" && (
+          <div style={{ padding: "80px 0", animation: "fadeUp 0.6s ease" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 28 }}>
+              <Crown size={28} />
+              <h2 style={{ fontFamily: "Bebas Neue", fontSize: 44, letterSpacing: 6, color: "#FFFFFF", margin: 0 }}>THE STORY</h2>
+            </div>
+            <div style={{ fontFamily: "Inter", fontSize: 16, lineHeight: 1.9, color: "#C8C8C8", maxWidth: 620, fontWeight: 300 }}>
+              <p>[Your story goes here. Who is AI KING? Where did the name come from? What drives your music? Talk about your sound, your city, your vision. Keep it raw and authentic — fans connect with the real.]</p>
+              <p style={{ marginTop: 20 }}>[What's coming next — the upcoming drops, collaborations, the bigger picture. Give people a reason to follow the journey from day one.]</p>
+            </div>
+            <div style={{
+              marginTop: 44, padding: 26, border: "1px solid rgba(255,20,147,0.20)",
+              background: "rgba(255,20,147,0.04)", display: "flex", gap: 40, flexWrap: "wrap",
+            }}>
+              {[
+                ["DISTRIBUTION", "TuneCore"],
+                ["BOOKING", "DM on Instagram"],
+                ["MANAGEMENT", "Self-managed"],
+              ].map(([label, val]) => (
+                <div key={label}>
+                  <span style={{ fontFamily: "JetBrains Mono", fontSize: 9, letterSpacing: 3, color: "#FF1493" }}>{label}</span>
+                  <p style={{ fontFamily: "Inter", fontSize: 14, color: "#DCDCDC", margin: "4px 0 0" }}>{val}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ===== LINKS (Link-in-Bio) ===== */}
+        {section === "links" && (
+          <div style={{ padding: "80px 0", animation: "fadeUp 0.6s ease", maxWidth: 440, margin: "0 auto" }}>
+            <div style={{ textAlign: "center", marginBottom: 36 }}>
+              <Crown size={36} />
+              <h2 style={{ fontFamily: "Bebas Neue", fontSize: 38, letterSpacing: 6, color: "#FFFFFF", marginTop: 10 }}>ALL LINKS</h2>
+            </div>
+            {[
+              ...SOCIALS,
+              ...STREAMING.map(s => ({ name: s.name, url: s.url })),
+            ].map((link, i) => (
+              <a key={i} href={link.url} target="_blank" rel="noreferrer" style={{
+                display: "block", padding: "16px 24px", marginBottom: 8,
+                border: "1px solid rgba(255,255,255,0.14)",
+                background: "rgba(255,255,255,0.03)",
+                textDecoration: "none", textAlign: "center",
+                fontFamily: "Bebas Neue", fontSize: 19, letterSpacing: 4, color: "#EEEEEE",
+                transition: "all 0.25s",
+              }}>{link.name.toUpperCase()}</a>
+            ))}
+          </div>
+        )}
+
+        {/* ===== EMAIL SIGNUP ===== */}
+        <div style={{ padding: "60px 0 80px", borderTop: "1px solid rgba(255,255,255,0.08)" }}>
+          <EmailSignup />
+        </div>
+
+        {/* ===== FOOTER ===== */}
+        <footer style={{ textAlign: "center", padding: "36px 0", borderTop: "1px solid rgba(255,255,255,0.08)" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, marginBottom: 12, opacity: 0.7 }}>
+            <Globe size={14} />
+            <span style={{ fontFamily: "Cinzel, serif", fontSize: 9, fontWeight: 700, letterSpacing: 5, color: "#B8860B" }}>
+              THE WORLD IS YOURS
+            </span>
+            <Globe size={14} />
+          </div>
+          <p style={{ fontFamily: "JetBrains Mono", fontSize: 9, letterSpacing: 3, color: "#666" }}>
+            © 2026 AI KING — ALL RIGHTS RESERVED — POWERED BY INDEPENDENCE
+          </p>
         </footer>
       </div>
-    </div>
-  );
-}
-
-function InlineEmailSignup() {
-  const [email, setEmail] = useState("");
-  const [done, setDone] = useState(false);
-
-  return (
-    <div style={{
-      border: "1px solid rgba(226,54,54,0.1)",
-      padding: "28px 20px",
-      textAlign: "center",
-      marginBottom: 20,
-      animation: "fadeUp 0.5s ease",
-    }}>
-      <Crown size={28} />
-      <p style={{
-        fontFamily: "'Dela Gothic One'", fontSize: 14,
-        color: "#ccc", letterSpacing: 2, marginTop: 8, marginBottom: 6,
-      }}>THE INNER CIRCLE</p>
-      <p style={{
-        fontFamily: "'JetBrains Mono'", fontSize: 10,
-        color: "#444", letterSpacing: 1, marginBottom: 16,
-      }}>Exclusive drops. Direct from AI KING.</p>
-      {!done ? (
-        <div style={{ display: "flex", maxWidth: 360, margin: "0 auto" }}>
-          <input value={email} onChange={e => setEmail(e.target.value)}
-            onKeyDown={e => e.key === "Enter" && email && (console.log("Sub:", email), setDone(true))}
-            placeholder="YOUR@EMAIL.COM" type="email"
-            style={{
-              flex: 1, padding: "14px 16px", background: "rgba(255,255,255,0.02)",
-              border: "1px solid rgba(255,255,255,0.06)", borderRight: "none",
-              color: "#E0E0E0", fontSize: 11, letterSpacing: 2,
-              fontFamily: "'JetBrains Mono'", outline: "none",
-            }} />
-          <button onClick={() => email && (console.log("Sub:", email), setDone(true))} style={{
-            padding: "14px 24px", background: "#E23636", border: "1px solid #E23636",
-            color: "#0A0A0A", fontSize: 11, fontWeight: 700, letterSpacing: 3,
-            fontFamily: "'JetBrains Mono'", cursor: "pointer",
-          }}>JOIN</button>
-        </div>
-      ) : (
-        <p style={{ fontFamily: "'JetBrains Mono'", fontSize: 11, letterSpacing: 2, color: "#E23636" }}>
-          ✓ YOU'RE IN THE CIRCLE
-        </p>
-      )}
     </div>
   );
 }
