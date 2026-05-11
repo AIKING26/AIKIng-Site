@@ -298,6 +298,54 @@ function BrandIcon({ name, size = 22 }) {
   );
 }
 
+// Brand-official colors for each platform's link tile.
+// `bg` can be a solid color or a gradient string. `text` is the foreground.
+const BRAND_COLORS = {
+  instagram:    { bg: "linear-gradient(135deg, #515BD4 0%, #833AB4 30%, #DD2A7B 60%, #F58529 100%)", text: "#FFFFFF", glow: "rgba(221,42,123,0.45)" },
+  tiktok:       { bg: "#010101",                                                                       text: "#FFFFFF", glow: "rgba(37,244,238,0.35)", border: "#25F4EE" },
+  youtube:      { bg: "#FF0000",                                                                       text: "#FFFFFF", glow: "rgba(255,0,0,0.45)" },
+  x:            { bg: "#000000",                                                                       text: "#FFFFFF", glow: "rgba(255,255,255,0.18)", border: "rgba(255,255,255,0.35)" },
+  spotify:      { bg: "#1DB954",                                                                       text: "#0A0A0A", glow: "rgba(29,185,84,0.45)" },
+  appleMusic:   { bg: "linear-gradient(135deg, #FA233B 0%, #FB5C74 100%)",                            text: "#FFFFFF", glow: "rgba(250,35,59,0.45)" },
+  tidal:        { bg: "#000000",                                                                       text: "#FFFFFF", glow: "rgba(255,255,255,0.25)", border: "rgba(255,255,255,0.55)" },
+  youtubeMusic: { bg: "linear-gradient(135deg, #FF0000 0%, #B30000 100%)",                            text: "#FFFFFF", glow: "rgba(255,0,0,0.45)" },
+  amazonMusic:  { bg: "#00A8E1",                                                                       text: "#FFFFFF", glow: "rgba(0,168,225,0.45)" },
+};
+
+function BrandLink({ link, size = "lg" }) {
+  const c = BRAND_COLORS[link.icon] || { bg: "#222", text: "#fff", glow: "rgba(255,255,255,0.1)" };
+  const dims = size === "sm"
+    ? { padX: 14, padY: 10, fontSize: 11, iconSize: 18, gap: 9, letter: 2 }
+    : { padX: 22, padY: 14, fontSize: 14, iconSize: 22, gap: 12, letter: 3 };
+  return (
+    <a
+      href={link.url} target="_blank" rel="noreferrer"
+      aria-label={link.name} title={link.name}
+      style={{
+        display: "inline-flex", alignItems: "center", gap: dims.gap,
+        padding: `${dims.padY}px ${dims.padX}px`,
+        background: c.bg, color: c.text,
+        border: c.border ? `1px solid ${c.border}` : "1px solid rgba(255,255,255,0.10)",
+        textDecoration: "none",
+        fontFamily: "JetBrains Mono", fontSize: dims.fontSize, fontWeight: 700, letterSpacing: dims.letter,
+        boxShadow: `0 0 24px ${c.glow}, 0 4px 18px rgba(0,0,0,0.4)`,
+        transition: "transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease",
+      }}
+      onMouseEnter={e => {
+        e.currentTarget.style.transform = "translateY(-2px)";
+        e.currentTarget.style.filter = "brightness(1.1)";
+      }}
+      onMouseLeave={e => {
+        e.currentTarget.style.transform = "translateY(0)";
+        e.currentTarget.style.filter = "brightness(1)";
+      }}
+    >
+      <BrandIcon name={link.icon} size={dims.iconSize} />
+      <span>{link.name.toUpperCase()}</span>
+    </a>
+  );
+}
+
 function fmtTime(s) {
   if (!s || isNaN(s) || !isFinite(s)) return "0:00";
   const m = Math.floor(s / 60);
@@ -635,10 +683,40 @@ function EmailModal({ onClose }) {
   const [email, setEmail] = useState("");
   const [done, setDone] = useState(false);
 
+  // ========================================
+  // EMAIL CAPTURE — WHERE DO SUBMISSIONS GO?
+  // ========================================
+  // RIGHT NOW: emails are NOT recorded anywhere. They print to the browser
+  // console (which only YOU could see if you opened devtools on the user's
+  // machine — useless in production). To actually capture emails, pick one:
+  //
+  //   1. FORMSPREE  — fastest. 50 free submissions/month.
+  //        a) Sign up at formspree.io, create a new form.
+  //        b) Copy your endpoint URL, e.g. https://formspree.io/f/xyz123
+  //        c) Replace the body of handleSubmit below with:
+  //             await fetch("https://formspree.io/f/YOUR_ID", {
+  //               method: "POST",
+  //               headers: { "Content-Type": "application/json", Accept: "application/json" },
+  //               body: JSON.stringify({ email }),
+  //             });
+  //             setDone(true);
+  //        d) Submissions arrive in your Formspree inbox + by email.
+  //
+  //   2. CONVERTKIT — best for indie artists. Free up to 10k subscribers.
+  //        a) Sign up at convertkit.com, create a Form, grab the form ID + API key.
+  //        b) POST to https://api.convertkit.com/v3/forms/FORM_ID/subscribe
+  //           with { api_key, email } in the body.
+  //        c) Real mailing-list features (broadcasts, tags, automations).
+  //
+  //   3. BUTTONDOWN — creator-friendly. Generous free tier.
+  //        Similar pattern: POST to their API with email.
+  //
+  // Until one of those is wired up, the form looks like it works but the
+  // emails go nowhere. Don't ship to a real audience without picking one.
+  // ========================================
   const handleSubmit = () => {
     if (!email) return;
-    // TODO: Connect to Mailchimp, ConvertKit, or your email service
-    console.log("New subscriber (modal):", email);
+    console.log("New subscriber (modal) — NOT YET SAVED:", email);
     setDone(true);
     setTimeout(onClose, 1400);
   };
@@ -762,10 +840,11 @@ function EmailSignup() {
   const [email, setEmail] = useState("");
   const [done, setDone] = useState(false);
 
+  // See EmailModal for the full guide on wiring this to Formspree /
+  // ConvertKit / Buttondown. Until wired, emails are NOT saved anywhere.
   const handleSubmit = () => {
     if (!email) return;
-    // TODO: Connect to Mailchimp, ConvertKit, or your email service
-    console.log("New subscriber:", email);
+    console.log("New subscriber (footer) — NOT YET SAVED:", email);
     setDone(true);
   };
 
@@ -850,28 +929,54 @@ export default function App() {
         animation: "grain 0.4s steps(3) infinite",
       }} />
 
-      {/* Miami sunset horizon — bottom of viewport */}
+      {/* Crimson horizon — bottom of viewport (deeper, less neon than before) */}
       <div style={{
         position: "fixed", left: 0, right: 0, bottom: 0, height: 360,
-        background: "linear-gradient(180deg, transparent 0%, rgba(75,0,130,0.18) 25%, rgba(255,20,147,0.20) 55%, rgba(255,99,71,0.18) 80%, rgba(255,165,0,0.15) 100%)",
+        background: "linear-gradient(180deg, transparent 0%, rgba(50,8,12,0.20) 25%, rgba(139,0,0,0.22) 55%, rgba(178,34,52,0.18) 80%, rgba(220,75,30,0.12) 100%)",
         pointerEvents: "none", zIndex: 0,
         animation: "sunsetPulse 8s ease-in-out infinite",
       }} />
 
-      {/* Ambient red glow — top right */}
+      {/* Ambient blood-red glow — top right */}
       <div style={{
         position: "fixed", top: "-20%", right: "-10%",
         width: "55%", height: "55%",
-        background: "radial-gradient(circle, rgba(226,54,54,0.10) 0%, transparent 65%)",
+        background: "radial-gradient(circle, rgba(178,34,52,0.14) 0%, transparent 65%)",
         pointerEvents: "none", zIndex: 0,
       }} />
-      {/* Miami magenta glow — opposite side */}
+      {/* Deep crimson bloom — opposite side */}
       <div style={{
         position: "fixed", top: "10%", left: "-15%",
         width: "50%", height: "55%",
-        background: "radial-gradient(circle, rgba(255,20,147,0.09) 0%, transparent 60%)",
+        background: "radial-gradient(circle, rgba(139,0,0,0.10) 0%, transparent 60%)",
         pointerEvents: "none", zIndex: 0,
       }} />
+
+      {/* Hero photo background — fixed, only on landing.
+          Save photo to public/images/hero-bw.jpg. If missing, the dark
+          gradient overlay alone still looks intentional. */}
+      {section === "home" && (
+        <div style={{
+          position: "fixed", inset: 0, zIndex: 0, pointerEvents: "none",
+          backgroundImage: `linear-gradient(180deg, rgba(8,6,6,0.78) 0%, rgba(8,6,6,0.82) 45%, rgba(20,6,8,0.96) 100%), url('/images/hero-bw.jpg')`,
+          backgroundSize: "cover",
+          backgroundPosition: "center 18%",
+          backgroundRepeat: "no-repeat",
+          backgroundColor: "#080606",
+        }} />
+      )}
+
+      {/* Music section photo background — fixed, only on /music */}
+      {section === "music" && (
+        <div style={{
+          position: "fixed", inset: 0, zIndex: 0, pointerEvents: "none",
+          backgroundImage: `linear-gradient(180deg, rgba(8,6,6,0.88) 0%, rgba(14,4,6,0.92) 100%), url('/images/portrait-red.jpg')`,
+          backgroundSize: "cover",
+          backgroundPosition: "right center",
+          backgroundRepeat: "no-repeat",
+          backgroundColor: "#0A0606",
+        }} />
+      )}
 
       {/* Palm trees — only on landing */}
       {section === "home" && (
@@ -893,10 +998,11 @@ export default function App() {
           <span style={{ fontFamily: "Bebas Neue", fontSize: 28, letterSpacing: 8, color: "#E23636", textShadow: "0 0 18px rgba(226,54,54,0.45)" }}>AI KING</span>
         </div>
         <div style={{ display: "flex", gap: 28, alignItems: "center" }}>
-          {["MUSIC", "ABOUT", "LINKS"].map(s => (
+          {/* ABOUT and LINKS hidden for now — re-enable by adding them back to this array */}
+          {["MUSIC"].map(s => (
             <span key={s} onClick={() => setSection(s.toLowerCase())} style={{
               fontFamily: "JetBrains Mono", fontSize: 11, letterSpacing: 3,
-              color: section === s.toLowerCase() ? "#FF1493" : "#999",
+              color: section === s.toLowerCase() ? "#DC143C" : "#999",
               cursor: "pointer", transition: "color 0.2s",
             }}>{s}</span>
           ))}
@@ -930,45 +1036,38 @@ export default function App() {
 
             <p style={{
               fontFamily: "JetBrains Mono", fontSize: 12, letterSpacing: 5,
-              color: "#B8B8B8", maxWidth: 480, margin: "0 auto",
+              color: "#C8C8C8", maxWidth: 480, margin: "0 auto",
             }}>INDEPENDENT HIP-HOP. UNFILTERED. DIRECT TO YOU.</p>
 
+            {/* ===== SOCIAL LINKS (moved above the player) ===== */}
+            <div style={{ marginTop: 48 }}>
+              <p style={{
+                fontFamily: "JetBrains Mono", fontSize: 9, fontWeight: 700, letterSpacing: 5,
+                color: "#DC143C", marginBottom: 16,
+              }}>— FOLLOW —</p>
+              <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
+                {SOCIALS.map(s => <BrandLink key={s.name} link={s} size="lg" />)}
+              </div>
+            </div>
+
+            {/* ===== STREAMING LINKS (moved above the player) ===== */}
+            <div style={{ marginTop: 28 }}>
+              <p style={{
+                fontFamily: "JetBrains Mono", fontSize: 9, fontWeight: 700, letterSpacing: 5,
+                color: "#DC143C", marginBottom: 16,
+              }}>— STREAM —</p>
+              <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
+                {STREAMING.map(s => <BrandLink key={s.name} link={s} size="sm" />)}
+              </div>
+            </div>
+
             {/* ===== MUSIC PLAYER ===== */}
-            <div style={{ marginTop: 50 }}>
+            <div style={{ marginTop: 56 }}>
               <p style={{
                 fontFamily: "JetBrains Mono", fontSize: 10, fontWeight: 700, letterSpacing: 5,
-                color: "#FF1493", marginBottom: 14, animation: "neonFlicker 5s infinite",
+                color: "#DC143C", marginBottom: 14, animation: "neonFlicker 5s infinite",
               }}>▶ NOW PLAYING</p>
               <MusicPlayer autoplay={autoplayUnlocked} />
-            </div>
-
-            <div style={{ display: "flex", gap: 16, justifyContent: "center", marginTop: 50, flexWrap: "wrap" }}>
-              <button onClick={() => setSection("links")} style={{
-                padding: "16px 40px", background: "#E23636", border: "none",
-                fontFamily: "Bebas Neue", fontSize: 18, letterSpacing: 5, color: "#FFFFFF", cursor: "pointer",
-                boxShadow: "0 0 32px rgba(226,54,54,0.55)",
-              }}>ALL LINKS</button>
-            </div>
-
-            {/* Social icons — recognizable brand marks */}
-            <div style={{ display: "flex", gap: 14, justifyContent: "center", marginTop: 44, flexWrap: "wrap" }}>
-              {SOCIALS.map(s => (
-                <a key={s.name} href={s.url} target="_blank" rel="noreferrer"
-                  aria-label={s.name}
-                  title={s.name}
-                  style={{
-                    display: "inline-flex", alignItems: "center", gap: 10,
-                    fontFamily: "JetBrains Mono", fontSize: 11, fontWeight: 700,
-                    letterSpacing: 3, color: "#DDDDDD", textDecoration: "none",
-                    padding: "10px 16px",
-                    border: "1px solid rgba(255,255,255,0.18)",
-                    background: "rgba(255,255,255,0.03)",
-                    transition: "all 0.25s",
-                  }}>
-                  <BrandIcon name={s.icon} size={20} />
-                  <span>{s.name.toUpperCase()}</span>
-                </a>
-              ))}
             </div>
           </div>
         )}
@@ -995,20 +1094,7 @@ export default function App() {
                 STREAM EVERYWHERE
               </p>
               <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
-                {STREAMING.map(s => (
-                  <a key={s.name} href={s.url} target="_blank" rel="noreferrer"
-                    aria-label={s.name} title={s.name}
-                    style={{
-                      display: "inline-flex", alignItems: "center", gap: 8,
-                      fontFamily: "JetBrains Mono", fontSize: 10, letterSpacing: 2,
-                      color: "#DDDDDD", textDecoration: "none", padding: "8px 12px",
-                      border: "1px solid rgba(255,255,255,0.18)",
-                      background: "rgba(255,255,255,0.03)", transition: "all 0.2s",
-                    }}>
-                    <BrandIcon name={s.icon} size={16} />
-                    <span>{s.name.toUpperCase()}</span>
-                  </a>
-                ))}
+                {STREAMING.map(s => <BrandLink key={s.name} link={s} size="sm" />)}
               </div>
             </div>
           </div>
