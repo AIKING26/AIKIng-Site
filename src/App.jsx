@@ -132,7 +132,7 @@ const TRACKS = [
 const SOCIALS = [
   { name: "Instagram", icon: "instagram", url: "https://instagram.com/OfficialAIKING" },
   { name: "TikTok",    icon: "tiktok",    url: "https://tiktok.com/@KingAI.Jay" },
-  { name: "YouTube",   icon: "youtube",   url: "https://youtube.com/@OfficialAIKING" },
+  { name: "YouTube",   icon: "youtube",   url: "https://youtube.com/OfficialAIKING" },
   { name: "X",         icon: "x",         url: "https://x.com/OfficialAIKING" },
 ];
 
