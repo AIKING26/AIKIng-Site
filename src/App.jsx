@@ -1092,6 +1092,20 @@ export default function App() {
     return () => document.removeEventListener("click", onFirstClick);
   }, []);
 
+  // Dynamic document.title per section — improves SEO + browser history
+  // since this is an SPA (the static <title> in index.html is the default).
+  useEffect(() => {
+    const titles = {
+      home:  "AI KING — Official Site | Independent Hip-Hop",
+      music: "Music — AI KING | Independent Hip-Hop Catalog",
+      about: "About AI KING — Independent Hip-Hop",
+      links: "All Links — AI KING",
+    };
+    if (typeof document !== "undefined") {
+      document.title = titles[section] || titles.home;
+    }
+  }, [section]);
+
   const dismissEmailModal = () => {
     setShowEmailModal(false);
     setAutoplayUnlocked(true);
