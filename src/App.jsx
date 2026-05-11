@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { track } from "@vercel/analytics";
 
 /*
   ========================================
@@ -364,8 +365,19 @@ const BRAND_COLORS = {
   amazonMusic:  { bg: "#00A8E1",                                                                       text: "#FFFFFF", glow: "rgba(0,168,225,0.45)" },
 };
 
-function BrandLink({ link, size = "lg" }) {
-  const c = BRAND_COLORS[link.icon] || { bg: "#222", text: "#fff", glow: "rgba(255,255,255,0.1)" };
+// Consistent gold-on-black scheme, used for social tiles to keep them
+// visually unified (and tie into the "THE WORLD IS YOURS" gold accent).
+const GOLD_THEME = {
+  bg: "#0A0808",
+  text: "#FFD700",
+  glow: "rgba(255,215,0,0.32)",
+  border: "#FFD700",
+};
+
+function BrandLink({ link, size = "lg", theme }) {
+  const c = theme === "gold"
+    ? GOLD_THEME
+    : (BRAND_COLORS[link.icon] || { bg: "#222", text: "#fff", glow: "rgba(255,255,255,0.1)" });
   const dims = size === "sm"
     ? { padX: 14, padY: 10, fontSize: 11, iconSize: 18, gap: 9, letter: 2 }
     : { padX: 22, padY: 14, fontSize: 14, iconSize: 22, gap: 12, letter: 3 };
@@ -381,15 +393,25 @@ function BrandLink({ link, size = "lg" }) {
         textDecoration: "none",
         fontFamily: "JetBrains Mono", fontSize: dims.fontSize, fontWeight: 700, letterSpacing: dims.letter,
         boxShadow: `0 0 24px ${c.glow}, 0 4px 18px rgba(0,0,0,0.4)`,
-        transition: "transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease",
+        transition: "transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease, background 0.18s ease",
       }}
       onMouseEnter={e => {
         e.currentTarget.style.transform = "translateY(-2px)";
-        e.currentTarget.style.filter = "brightness(1.1)";
+        if (theme === "gold") {
+          e.currentTarget.style.background = "#FFD700";
+          e.currentTarget.style.color = "#0A0808";
+        } else {
+          e.currentTarget.style.filter = "brightness(1.1)";
+        }
       }}
       onMouseLeave={e => {
         e.currentTarget.style.transform = "translateY(0)";
-        e.currentTarget.style.filter = "brightness(1)";
+        if (theme === "gold") {
+          e.currentTarget.style.background = c.bg;
+          e.currentTarget.style.color = c.text;
+        } else {
+          e.currentTarget.style.filter = "brightness(1)";
+        }
       }}
     >
       <BrandIcon name={link.icon} size={dims.iconSize} />
@@ -415,6 +437,10 @@ function LocalPlayer({ tracks, artist, autoplay = false }) {
   const [error, setError] = useState(false);
   // Once true, switching tracks (or external autoplay trigger) starts playback
   const [shouldPlay, setShouldPlay] = useState(false);
+  // Per-session play tracking — fire one analytics event per track,
+  // not on every pause/resume. Counts are visible in the Vercel
+  // dashboard under Analytics → Custom Events.
+  const playedTracksRef = useRef(new Set());
 
   const current = tracks[currentIndex];
 
@@ -483,7 +509,17 @@ function LocalPlayer({ tracks, artist, autoplay = false }) {
         preload="metadata"
         onTimeUpdate={() => setCurrentTime(audioRef.current?.currentTime || 0)}
         onLoadedMetadata={() => setDuration(audioRef.current?.duration || 0)}
-        onPlay={() => setIsPlaying(true)}
+        onPlay={() => {
+          setIsPlaying(true);
+          // Track unique play per session — pause/resume doesn't double-count
+          const key = current.src;
+          if (!playedTracksRef.current.has(key)) {
+            playedTracksRef.current.add(key);
+            try {
+              track("track_play", { title: current.title, src: current.src });
+            } catch (e) { /* Vercel Analytics not available — silently ignore */ }
+          }
+        }}
         onPause={() => setIsPlaying(false)}
         onEnded={handleEnded}
         onError={() => setError(true)}
@@ -945,22 +981,22 @@ function EmailSignup() {
 
 export default function App() {
   const [section, setSection] = useState("home");
-  const [showEmailModal, setShowEmailModal] = useState(false);
+  // Initial state computed at first render — modal shows IMMEDIATELY on
+  // first visit (no delay). Returning visitors (localStorage flag set)
+  // skip the modal entirely.
+  const [showEmailModal, setShowEmailModal] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return !localStorage.getItem("aiking_email_seen");
+  });
   const [autoplayUnlocked, setAutoplayUnlocked] = useState(false);
 
-  // First-visit email modal — pops shortly after page load.
-  // Repeat visitors don't see it again (localStorage flag).
+  // For returning visitors: autoplay is gated on the next user click
+  // anywhere (browser policy — can't autoplay audio without a gesture).
   useEffect(() => {
-    const seen = typeof window !== "undefined" && localStorage.getItem("aiking_email_seen");
-    if (seen) {
-      // Returning visitor — autoplay is gated on next user click (browser policy).
-      const onFirstClick = () => setAutoplayUnlocked(true);
-      document.addEventListener("click", onFirstClick, { once: true });
-      return () => document.removeEventListener("click", onFirstClick);
-    }
-    // New visitor — show modal after brief delay so the page renders first.
-    const t = setTimeout(() => setShowEmailModal(true), 700);
-    return () => clearTimeout(t);
+    if (showEmailModal) return; // First-visit flow — modal dismiss handles autoplay unlock
+    const onFirstClick = () => setAutoplayUnlocked(true);
+    document.addEventListener("click", onFirstClick, { once: true });
+    return () => document.removeEventListener("click", onFirstClick);
   }, []);
 
   const dismissEmailModal = () => {
@@ -1104,7 +1140,7 @@ export default function App() {
                 color: "#DC143C", marginBottom: 16,
               }}>— FOLLOW —</p>
               <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-                {SOCIALS.map(s => <BrandLink key={s.name} link={s} size="lg" />)}
+                {SOCIALS.map(s => <BrandLink key={s.name} link={s} size="lg" theme="gold" />)}
               </div>
             </div>
 
