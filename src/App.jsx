@@ -1047,12 +1047,12 @@ export default function App() {
       }} />
 
       {/* Hero photo background — fixed, only on landing.
-          Save photo to public/images/hero-bw.jpg. If missing, the dark
+          Save photo to public/images/hero-bw.webp. If missing, the dark
           gradient overlay alone still looks intentional. */}
       {section === "home" && (
         <div style={{
           position: "fixed", inset: 0, zIndex: 0, pointerEvents: "none",
-          backgroundImage: `linear-gradient(180deg, rgba(8,6,6,0.78) 0%, rgba(8,6,6,0.82) 45%, rgba(20,6,8,0.96) 100%), url('/images/hero-bw.jpg')`,
+          backgroundImage: `linear-gradient(180deg, rgba(8,6,6,0.78) 0%, rgba(8,6,6,0.82) 45%, rgba(20,6,8,0.96) 100%), url('/images/hero-bw.webp')`,
           backgroundSize: "cover",
           backgroundPosition: "center 18%",
           backgroundRepeat: "no-repeat",
@@ -1064,7 +1064,7 @@ export default function App() {
       {section === "music" && (
         <div style={{
           position: "fixed", inset: 0, zIndex: 0, pointerEvents: "none",
-          backgroundImage: `linear-gradient(180deg, rgba(8,6,6,0.88) 0%, rgba(14,4,6,0.92) 100%), url('/images/portrait-red.jpg')`,
+          backgroundImage: `linear-gradient(180deg, rgba(8,6,6,0.88) 0%, rgba(14,4,6,0.92) 100%), url('/images/portrait-red.webp')`,
           backgroundSize: "cover",
           backgroundPosition: "right center",
           backgroundRepeat: "no-repeat",
