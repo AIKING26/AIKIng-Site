@@ -56,6 +56,58 @@ const MUSIC_PLAYER = {
   },
 };
 
+// CONVERTKIT — Email list integration
+// Read from Vite env vars at build time. Set these in:
+//   • Local dev:  create .env.local with VITE_CONVERTKIT_API_KEY=... and VITE_CONVERTKIT_FORM_ID=...
+//   • Vercel:     Project Settings → Environment Variables → add both
+// If either is missing, the modal/footer signup still works visually but
+// the email isn't saved (a console warning fires).
+//
+// Where to find these in ConvertKit:
+//   API_KEY: Account → Settings → Advanced → API Key (the v3 public key, safe in browser)
+//   FORM_ID: Grow → Landing Pages & Forms → click your form → it's the number in the URL
+//            (kit.com/forms/XXXXXXX/edit ← that's your form ID)
+const CONVERTKIT = {
+  apiKey: import.meta.env.VITE_CONVERTKIT_API_KEY || "",
+  formId: import.meta.env.VITE_CONVERTKIT_FORM_ID || "",
+};
+
+async function subscribeToConvertKit(email) {
+  if (!CONVERTKIT.apiKey || !CONVERTKIT.formId) {
+    console.warn(
+      "ConvertKit not configured — set VITE_CONVERTKIT_API_KEY and VITE_CONVERTKIT_FORM_ID as env vars. Email not saved:",
+      email
+    );
+    return { ok: false, reason: "not_configured" };
+  }
+  try {
+    const res = await fetch(
+      `https://api.convertkit.com/v3/forms/${CONVERTKIT.formId}/subscribe`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ api_key: CONVERTKIT.apiKey, email }),
+      }
+    );
+    if (!res.ok) {
+      console.error("ConvertKit error:", await res.text());
+      return { ok: false, reason: "api_error" };
+    }
+    return { ok: true };
+  } catch (err) {
+    console.error("ConvertKit fetch failed:", err);
+    return { ok: false, reason: "network" };
+  }
+}
+
+// YOUTUBE WATCH SECTION — paste your music-video YouTube ID below (just
+// the ID, the part after v= in the URL, e.g. "dQw4w9WgXcQ").
+// Leave as the placeholder string to hide the section entirely.
+const WATCH_VIDEO = {
+  youtubeId: "PASTE_YOUTUBE_ID_HERE",
+  title: "OFFICIAL VIDEO",
+};
+
 // STRIPE: Create Payment Links in your Stripe Dashboard for each track
 // Go to: dashboard.stripe.com → Payment Links → Create
 const STRIPE_LINKS = {
@@ -679,46 +731,53 @@ function TrackRow({ track, index }) {
   );
 }
 
+function WatchSection() {
+  const { youtubeId, title } = WATCH_VIDEO;
+  const isPlaceholder = !youtubeId || youtubeId === "PASTE_YOUTUBE_ID_HERE";
+  if (isPlaceholder) return null; // Hide entirely until a real video ID is set
+  return (
+    <div style={{ marginTop: 60 }}>
+      <p style={{
+        fontFamily: "JetBrains Mono", fontSize: 10, fontWeight: 700, letterSpacing: 5,
+        color: "#DC143C", marginBottom: 14,
+      }}>▶ WATCH — {title}</p>
+      <div style={{
+        position: "relative", maxWidth: 720, margin: "0 auto",
+        paddingBottom: "56.25%", height: 0, overflow: "hidden",
+        border: "1px solid rgba(220,20,60,0.35)",
+        boxShadow: "0 0 60px rgba(220,20,60,0.18), 0 0 120px rgba(139,0,0,0.12)",
+      }}>
+        <iframe
+          src={`https://www.youtube.com/embed/${youtubeId}?rel=0&modestbranding=1`}
+          title={`AI KING — ${title}`}
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+          style={{
+            position: "absolute", top: 0, left: 0, width: "100%", height: "100%",
+            border: 0, display: "block",
+          }}
+        />
+      </div>
+    </div>
+  );
+}
+
 function EmailModal({ onClose }) {
   const [email, setEmail] = useState("");
   const [done, setDone] = useState(false);
 
-  // ========================================
-  // EMAIL CAPTURE — WHERE DO SUBMISSIONS GO?
-  // ========================================
-  // RIGHT NOW: emails are NOT recorded anywhere. They print to the browser
-  // console (which only YOU could see if you opened devtools on the user's
-  // machine — useless in production). To actually capture emails, pick one:
-  //
-  //   1. FORMSPREE  — fastest. 50 free submissions/month.
-  //        a) Sign up at formspree.io, create a new form.
-  //        b) Copy your endpoint URL, e.g. https://formspree.io/f/xyz123
-  //        c) Replace the body of handleSubmit below with:
-  //             await fetch("https://formspree.io/f/YOUR_ID", {
-  //               method: "POST",
-  //               headers: { "Content-Type": "application/json", Accept: "application/json" },
-  //               body: JSON.stringify({ email }),
-  //             });
-  //             setDone(true);
-  //        d) Submissions arrive in your Formspree inbox + by email.
-  //
-  //   2. CONVERTKIT — best for indie artists. Free up to 10k subscribers.
-  //        a) Sign up at convertkit.com, create a Form, grab the form ID + API key.
-  //        b) POST to https://api.convertkit.com/v3/forms/FORM_ID/subscribe
-  //           with { api_key, email } in the body.
-  //        c) Real mailing-list features (broadcasts, tags, automations).
-  //
-  //   3. BUTTONDOWN — creator-friendly. Generous free tier.
-  //        Similar pattern: POST to their API with email.
-  //
-  // Until one of those is wired up, the form looks like it works but the
-  // emails go nowhere. Don't ship to a real audience without picking one.
-  // ========================================
-  const handleSubmit = () => {
+  // Wired to ConvertKit. Set VITE_CONVERTKIT_API_KEY + VITE_CONVERTKIT_FORM_ID
+  // env vars in Vercel (and .env.local for local dev). See CONVERTKIT config
+  // block at top of this file for details.
+  const handleSubmit = async () => {
     if (!email) return;
-    console.log("New subscriber (modal) — NOT YET SAVED:", email);
+    const result = await subscribeToConvertKit(email);
+    if (!result.ok && result.reason !== "not_configured") {
+      // Still show success to the user — don't punish them for our backend
+      // hiccup. The error is logged for us to investigate.
+    }
     setDone(true);
-    setTimeout(onClose, 1400);
+    setTimeout(onClose, 1600);
   };
 
   return (
@@ -840,11 +899,10 @@ function EmailSignup() {
   const [email, setEmail] = useState("");
   const [done, setDone] = useState(false);
 
-  // See EmailModal for the full guide on wiring this to Formspree /
-  // ConvertKit / Buttondown. Until wired, emails are NOT saved anywhere.
-  const handleSubmit = () => {
+  // Wired to ConvertKit (same as EmailModal). See CONVERTKIT config at top.
+  const handleSubmit = async () => {
     if (!email) return;
-    console.log("New subscriber (footer) — NOT YET SAVED:", email);
+    await subscribeToConvertKit(email);
     setDone(true);
   };
 
@@ -1050,7 +1108,9 @@ export default function App() {
               </div>
             </div>
 
-            {/* ===== STREAMING LINKS (moved above the player) ===== */}
+            {/* ===== STREAMING LINKS — hidden until real URLs available.
+                To re-enable: uncomment the block below AND fill in real
+                URLs in the STREAMING array near the top of this file. =====
             <div style={{ marginTop: 28 }}>
               <p style={{
                 fontFamily: "JetBrains Mono", fontSize: 9, fontWeight: 700, letterSpacing: 5,
@@ -1060,15 +1120,19 @@ export default function App() {
                 {STREAMING.map(s => <BrandLink key={s.name} link={s} size="sm" />)}
               </div>
             </div>
+            */}
 
             {/* ===== MUSIC PLAYER ===== */}
-            <div style={{ marginTop: 56 }}>
+            <div style={{ marginTop: 48 }}>
               <p style={{
                 fontFamily: "JetBrains Mono", fontSize: 10, fontWeight: 700, letterSpacing: 5,
                 color: "#DC143C", marginBottom: 14, animation: "neonFlicker 5s infinite",
               }}>▶ NOW PLAYING</p>
               <MusicPlayer autoplay={autoplayUnlocked} />
             </div>
+
+            {/* ===== WATCH (YouTube video) — auto-hides if no video ID set ===== */}
+            <WatchSection />
           </div>
         )}
 
@@ -1089,6 +1153,8 @@ export default function App() {
             <div style={{ border: "1px solid rgba(255,255,255,0.10)", background: "rgba(255,255,255,0.02)" }}>
               {TRACKS.map((t, i) => <TrackRow key={t.id} track={t} index={i} />)}
             </div>
+            {/* STREAM EVERYWHERE row — hidden until real URLs available.
+                To re-enable: uncomment and fill in the STREAMING array urls.
             <div style={{ marginTop: 32, textAlign: "center" }}>
               <p style={{ fontFamily: "JetBrains Mono", fontSize: 10, letterSpacing: 3, color: "#AAA", marginBottom: 14 }}>
                 STREAM EVERYWHERE
@@ -1097,6 +1163,7 @@ export default function App() {
                 {STREAMING.map(s => <BrandLink key={s.name} link={s} size="sm" />)}
               </div>
             </div>
+            */}
           </div>
         )}
 
