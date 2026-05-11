@@ -31,10 +31,10 @@ const MUSIC_PLAYER = {
   local: {
     artist: "AI KING",
     tracks: [
-      { src: "/audio/get-away-freestyle.mp3", title: "GET AWAY (FREESTYLE)" },
-      { src: "/audio/east-sign.mp3",          title: "EAST SIGN" },
-      { src: "/audio/to-the-sky.mp3",         title: "TO THE SKY" },
-      { src: "/audio/meant-pussy.mp3",        title: "MEANT PUSSY" },
+      { src: "/audio/everything-official.mp3", title: "EVERYTHING OFFICIAL" },
+      { src: "/audio/soldier-with-it.mp3",     title: "SOLDIER WITH IT" },
+      { src: "/audio/to-the-sky.mp3",          title: "TO THE SKY" },
+      { src: "/audio/meant-pussy.mp3",         title: "MEANT PUSSY" },
     ],
   },
 
