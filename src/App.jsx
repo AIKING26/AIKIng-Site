@@ -103,11 +103,17 @@ async function subscribeToConvertKit(email) {
 
 // YOUTUBE WATCH SECTION — paste your music-video YouTube ID below (just
 // the ID, the part after v= in the URL, e.g. "dQw4w9WgXcQ").
-// Leave as the placeholder string to hide the section entirely.
+// NOTE: the video on YouTube must be set to "Unlisted" or "Public" —
+// "Private" videos refuse to embed and visitors see "Video unavailable".
 const WATCH_VIDEO = {
-  youtubeId: "PASTE_YOUTUBE_ID_HERE",
+  youtubeId: "9Pyn6G7jZbM",
   title: "OFFICIAL VIDEO",
 };
+
+// Custom event channel so the audio player and the YouTube iframe can
+// pause each other. Either component dispatches { source: 'audio' | 'video' }
+// when it starts; the other component listens and pauses itself.
+const MEDIA_PLAY_EVENT = "aiking-media-play";
 
 // STRIPE: Create Payment Links in your Stripe Dashboard for each track
 // Go to: dashboard.stripe.com → Payment Links → Create
@@ -453,6 +459,17 @@ function LocalPlayer({ tracks, artist, autoplay = false }) {
     if (autoplay) setShouldPlay(true);
   }, [autoplay]);
 
+  // Pause this audio whenever the YouTube video announces it's playing
+  useEffect(() => {
+    const onVideoPlay = (e) => {
+      if (e.detail?.source === "video" && audioRef.current && !audioRef.current.paused) {
+        audioRef.current.pause();
+      }
+    };
+    window.addEventListener(MEDIA_PLAY_EVENT, onVideoPlay);
+    return () => window.removeEventListener(MEDIA_PLAY_EVENT, onVideoPlay);
+  }, []);
+
   // When the source changes (track switch) or shouldPlay flips on, attempt playback
   useEffect(() => {
     setCurrentTime(0);
@@ -511,6 +528,10 @@ function LocalPlayer({ tracks, artist, autoplay = false }) {
         onLoadedMetadata={() => setDuration(audioRef.current?.duration || 0)}
         onPlay={() => {
           setIsPlaying(true);
+          // Tell the YouTube iframe to pause (mutual exclusion)
+          window.dispatchEvent(
+            new CustomEvent(MEDIA_PLAY_EVENT, { detail: { source: "audio" } })
+          );
           // Track unique play per session — pause/resume doesn't double-count
           const key = current.src;
           if (!playedTracksRef.current.has(key)) {
@@ -770,7 +791,71 @@ function TrackRow({ track, index }) {
 function WatchSection() {
   const { youtubeId, title } = WATCH_VIDEO;
   const isPlaceholder = !youtubeId || youtubeId === "PASTE_YOUTUBE_ID_HERE";
-  if (isPlaceholder) return null; // Hide entirely until a real video ID is set
+  const playerRef = useRef(null);
+  // Stable container id (would collide if WatchSection ever rendered twice)
+  const containerId = useRef(`yt-player-${Math.random().toString(36).slice(2, 9)}`).current;
+
+  useEffect(() => {
+    if (isPlaceholder) return;
+
+    let cancelled = false;
+
+    const setupPlayer = () => {
+      if (cancelled || playerRef.current || !window.YT?.Player) return;
+      playerRef.current = new window.YT.Player(containerId, {
+        videoId: youtubeId,
+        playerVars: { rel: 0, modestbranding: 1, playsinline: 1 },
+        events: {
+          onStateChange: (event) => {
+            // 1 = PLAYING in YouTube IFrame API state codes
+            if (event.data === 1) {
+              window.dispatchEvent(
+                new CustomEvent(MEDIA_PLAY_EVENT, { detail: { source: "video" } })
+              );
+            }
+          },
+        },
+      });
+    };
+
+    // Load the YouTube IFrame API exactly once per page
+    if (window.YT?.Player) {
+      setupPlayer();
+    } else if (!document.getElementById("yt-iframe-api")) {
+      const tag = document.createElement("script");
+      tag.id = "yt-iframe-api";
+      tag.src = "https://www.youtube.com/iframe_api";
+      document.body.appendChild(tag);
+      window.onYouTubeIframeAPIReady = setupPlayer;
+    } else {
+      // API script already loading from elsewhere
+      const prevReady = window.onYouTubeIframeAPIReady;
+      window.onYouTubeIframeAPIReady = () => {
+        if (prevReady) prevReady();
+        setupPlayer();
+      };
+    }
+
+    // Pause video whenever the audio player announces it's playing
+    const onAudioPlay = (e) => {
+      if (e.detail?.source === "audio" && playerRef.current?.pauseVideo) {
+        playerRef.current.pauseVideo();
+      }
+    };
+    window.addEventListener(MEDIA_PLAY_EVENT, onAudioPlay);
+
+    return () => {
+      cancelled = true;
+      window.removeEventListener(MEDIA_PLAY_EVENT, onAudioPlay);
+      if (playerRef.current?.destroy) {
+        try { playerRef.current.destroy(); } catch (_) {}
+        playerRef.current = null;
+      }
+    };
+  }, [youtubeId, isPlaceholder, containerId]);
+
+  if (isPlaceholder) return null;
+
   return (
     <div style={{ marginTop: 60 }}>
       <p style={{
@@ -783,15 +868,10 @@ function WatchSection() {
         border: "1px solid rgba(220,20,60,0.35)",
         boxShadow: "0 0 60px rgba(220,20,60,0.18), 0 0 120px rgba(139,0,0,0.12)",
       }}>
-        <iframe
-          src={`https://www.youtube.com/embed/${youtubeId}?rel=0&modestbranding=1`}
-          title={`AI KING — ${title}`}
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          allowFullScreen
-          style={{
-            position: "absolute", top: 0, left: 0, width: "100%", height: "100%",
-            border: 0, display: "block",
-          }}
+        {/* The YouTube IFrame API replaces this div with the player iframe */}
+        <div
+          id={containerId}
+          style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }}
         />
       </div>
     </div>
