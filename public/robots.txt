@@ -1,0 +1,10 @@
+# Crawler instructions for officialaiking.com
+
+User-agent: *
+Allow: /
+
+# Don't crawl raw audio / image asset directories from search (still served fine to the app)
+Disallow: /audio/
+Disallow: /images/
+
+Sitemap: https://officialaiking.com/sitemap.xml
