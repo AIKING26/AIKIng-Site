@@ -804,11 +804,21 @@ function WatchSection() {
       if (cancelled || playerRef.current || !window.YT?.Player) return;
       playerRef.current = new window.YT.Player(containerId, {
         videoId: youtubeId,
-        playerVars: { rel: 0, modestbranding: 1, playsinline: 1 },
+        playerVars: { rel: 0, modestbranding: 1, playsinline: 1, hd: 1 },
         events: {
+          onReady: (event) => {
+            // Hint YouTube to use the highest resolution available.
+            // This is a SUGGESTION — YouTube can still downgrade based on
+            // measured bandwidth, viewport size, or user preference.
+            // YouTube removed the URL `vq` param years ago for the same reason.
+            try { event.target.setPlaybackQuality("hd1080"); } catch (_) {}
+          },
           onStateChange: (event) => {
             // 1 = PLAYING in YouTube IFrame API state codes
             if (event.data === 1) {
+              // Re-hint quality once playback starts — YouTube sometimes
+              // auto-selects low quality before bandwidth detection finishes
+              try { event.target.setPlaybackQuality("hd1080"); } catch (_) {}
               window.dispatchEvent(
                 new CustomEvent(MEDIA_PLAY_EVENT, { detail: { source: "video" } })
               );
@@ -863,7 +873,10 @@ function WatchSection() {
         color: "#DC143C", marginBottom: 14,
       }}>▶ WATCH — {title}</p>
       <div style={{
-        position: "relative", maxWidth: 720, margin: "0 auto",
+        // Wider container (920 ≈ outer page width) so YouTube has a reason
+        // to render at 720p/1080p instead of 360p. YouTube picks quality
+        // based on rendered pixel dimensions; small players get small res.
+        position: "relative", maxWidth: 920, margin: "0 auto",
         paddingBottom: "56.25%", height: 0, overflow: "hidden",
         border: "1px solid rgba(220,20,60,0.35)",
         boxShadow: "0 0 60px rgba(220,20,60,0.18), 0 0 120px rgba(139,0,0,0.12)",
@@ -1238,6 +1251,9 @@ export default function App() {
             </div>
             */}
 
+            {/* ===== WATCH (YouTube video) — auto-hides if no video ID set ===== */}
+            <WatchSection />
+
             {/* ===== MUSIC PLAYER ===== */}
             <div style={{ marginTop: 48 }}>
               <p style={{
@@ -1246,9 +1262,6 @@ export default function App() {
               }}>▶ NOW PLAYING</p>
               <MusicPlayer autoplay={autoplayUnlocked} />
             </div>
-
-            {/* ===== WATCH (YouTube video) — auto-hides if no video ID set ===== */}
-            <WatchSection />
           </div>
         )}
 
