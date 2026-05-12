@@ -35,6 +35,7 @@ const MUSIC_PLAYER = {
       { src: "/audio/soldier-with-it.mp3",     title: "SOLDIER WITH IT" },
       { src: "/audio/to-the-sky.mp3",          title: "TO THE SKY" },
       { src: "/audio/meant-pussy.mp3",         title: "MEANT PUSSY" },
+      { src: "/audio/oochy-wally-freestyle.mp3", title: "OOCHY WALLY (FREESTYLE)" },
     ],
   },
 
