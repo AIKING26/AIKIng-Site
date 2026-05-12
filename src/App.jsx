@@ -106,7 +106,7 @@ async function subscribeToConvertKit(email) {
 // NOTE: the video on YouTube must be set to "Unlisted" or "Public" —
 // "Private" videos refuse to embed and visitors see "Video unavailable".
 const WATCH_VIDEO = {
-  youtubeId: "9Pyn6G7jZbM",
+  youtubeId: "HaKiYaO7uoM",
   title: "OFFICIAL VIDEO",
 };
 
